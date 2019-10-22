@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 /**
  *
- * @author Miguel
+ * @author Silvia
  */
 public class GroupMember implements Serializable{
     String alias;

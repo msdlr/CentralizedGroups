@@ -18,18 +18,21 @@ public class ObjectGroup {
     int oid;    /* owner id */
     
     public ObjectGroup(String groupAlias, int gid, String userAlias, int uid) {
-        
+        this.alias = groupAlias;
+        this.ownerAlias = userAlias;
+        this.gid = gid;
+        this.oid = uid;
     }
     
-    public GroupMember isMember() {
+    public GroupMember isMember(String userAlias) {
         return null;
     }
     
-    public GroupMember addMember() {
+    public GroupMember addMember(String userAlias) {
         return null;
     }
     
-    public boolean removeMember() {
+    public boolean removeMember(String userAlias) {
         return false;
     }
     

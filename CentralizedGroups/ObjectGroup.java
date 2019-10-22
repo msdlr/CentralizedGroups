@@ -12,19 +12,22 @@ import java.util.LinkedList;
  * @author Silvia
  */
 public class ObjectGroup {
-    String alias;
-    String ownerAlias;
+    String galias;
+    String oalias;
     int gid;    /* group id */
     int oid;    /* owner id */
+    LinkedList<GroupMember> members;
     
-    public ObjectGroup(String groupAlias, int gid, String userAlias, int uid) {
-        this.alias = groupAlias;
-        this.ownerAlias = userAlias;
+    public ObjectGroup(String galias, int gid, String oalias, int oid) {
+        this.galias = galias;
+        this.oalias = oalias;
         this.gid = gid;
-        this.oid = uid;
+        this.oid = oid;
+        addMember(oalias);
     }
     
     public GroupMember isMember(String userAlias) {
+        
         return null;
     }
     

@@ -27,7 +27,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     //Cerrojos para funciones de grupos
     Lock mutex = new ReentrantLock();
     //Contador para generar identificadores de grupo
-    long contadorID = 0;
+    int contadorID = 0;
     
     /* FUNCIONES */
     
@@ -38,31 +38,35 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
 
     @Override
     public int createGroup(String galias, String oalias, String ohostname) {
+        /* ENTRADA EN SECCIÓN CRÍTICA */
+        this.mutex.lock();
+        
         /* VARIABLES */
-        //Cerrojo para la función
-        Condition Creating =  this.mutex.newCondition();
         //Objeto ObjectGroup a crear
         ObjectGroup tmp;
+        //El campo oid del constructor de ServeGroup es el uid del usuario del que se pasa el hostname
+        int nuevoOID = 0;
         
         /*CÓDIGO*/
         // Buscar si el grupo solicitado ya existe y devolver error
         for(ObjectGroup OG : groupList){
             if(OG.galias.equals(galias)) return -1;
         }
-        // Crear el grupo bajo mutex
-        mutex.lock();
         try{
-        //Intentamos esperar en la cola de espera para esta función
-            try {
-                Creating.await();
-            } catch (InterruptedException ex) {
-                Logger.getLogger(GroupServer.class.getName()).log(Level.SEVERE, null, ex);
-            }
             //Constructor del grupo:
             //public ObjectGroup(String galias, int gid, String oalias, int oid)
             
+            //Encontramos el miembro con el hostname que se pasa por parámetro
+            for(GroupMember g : memberList){
+                if( g.hostname == ohostname ) nuevoOID = g.uid;
+            }
+            //Generamos un nuevo identificador de grupo
+            contadorID++;
+            //Creamos el nuevo grupo
+            this.groupList.add(new ObjectGroup(galias,contadorID, oalias, nuevoOID));
         }
         finally{
+            /* SALIDA DE SECCIÓN CRÍTICA */
             mutex.unlock();
         }
         return 0;

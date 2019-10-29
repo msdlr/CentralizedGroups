@@ -6,6 +6,8 @@
 package CentralizedGroups;
 
 import java.util.LinkedList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  *
@@ -19,6 +21,11 @@ public class ObjectGroup {
     private int counter;
     LinkedList<GroupMember> members;
     
+    /* estructuras para bloqueo */
+    ReentrantLock l = new ReentrantLock(true);
+    Condition allowInsert = l.newCondition();
+    Condition allowDelete = l.newCondition();
+    
     public ObjectGroup(String galias, int gid, String oalias, int oid) {
         this.galias = galias;
         this.oalias = oalias;
@@ -31,31 +38,48 @@ public class ObjectGroup {
     public GroupMember isMember(String alias) {
         /* buscar miembro en la lista */
         for (GroupMember member : members) {
-            if (member.alias.equals(alias)) return member;
+            if (member.alias.equals(alias))
+                return member;
         }
         return null;
     }
     
     public GroupMember addMember(String alias) {
+        /* TODO: control de bloqueo */
         /* si ya existe un miembro con el mismo alias, devolver null */
-        if (isMember(alias) == null) return null;
+        if (isMember(alias) != null)
+            return null;
         /* si no, añadir miembro nuevo */
-        members.add(new GroupMember(alias, this.oalias, counter, this.gid));
+        members.add(new GroupMember(alias, oalias, counter, gid));
         /*                                 ^ nombre del propietario??     */
+        /* una vez añadido, incrementar contador y devolver miembro */
         counter++;
-        /* TODO: figure this return out */
-        return null;
+        return members.getLast();
     }
     
     public boolean removeMember(String ualias) {
-        return false;
+        /* TODO: control de bloqueo */
+        /* si no existe el miembro o es el propietario, devolver null */
+        if (isMember(ualias) == null || oalias.equals(ualias))
+            return false;
+        members.remove(isMember(ualias));
+        return true;
     }
     
-    public void StopMembers() {}
-    public void AllowMembers() {}
+    public void StopMembers() {
+        /* TODO: averiguar cómo funciona esto xdxd */
+    }
+    
+    public void AllowMembers() {
+        /* TODO: averiguar cómo funciona esto xdxd */
+    }
     
     public LinkedList<String> ListMembers() {
-        return null;
+        LinkedList<String> nombres = null;
+        for (GroupMember member : members) {
+            nombres.add(member.alias);
+        }
+        return nombres;
     }
     
 }

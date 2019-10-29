@@ -20,7 +20,7 @@ public interface GroupServerInterface {
     boolean removeMember (String galias, String alias);
     GroupMember isMember (String galias, String alias);
     boolean StopMembers (String galias);
-    boolean AloowMembers (String gid);
+    boolean AllowMembers (String gid);
     LinkedList<String> ListMembers (String galias);
     LinkedList<String> ListGroup();
 }

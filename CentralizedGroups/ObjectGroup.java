@@ -6,6 +6,8 @@
 package CentralizedGroups;
 
 import java.util.LinkedList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  *
@@ -18,6 +20,11 @@ public class ObjectGroup {
     int oid;    /* owner id */
     private int counter;
     LinkedList<GroupMember> members;
+    
+    /* estructuras para bloqueo */
+    ReentrantLock l = new ReentrantLock(true);
+    Condition allowInsert = l.newCondition();
+    Condition allowDelete = l.newCondition();
     
     public ObjectGroup(String galias, int gid, String oalias, int oid) {
         this.galias = galias;
@@ -60,11 +67,11 @@ public class ObjectGroup {
     }
     
     public void StopMembers() {
-        
+        /* TODO: averiguar cómo funciona esto xdxd */
     }
     
     public void AllowMembers() {
-        
+        /* TODO: averiguar cómo funciona esto xdxd */
     }
     
     public LinkedList<String> ListMembers() {

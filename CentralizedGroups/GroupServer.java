@@ -92,12 +92,40 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
 
     @Override
     public boolean removeGroup(String galias, String oalias) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        boolean correcto=false;
+        
+        for(ObjectGroup OG : groupList){
+            //si encontramos el grupo que cumpla los parámetros
+            if (OG.galias.equals(galias) && OG.oalias.equals(oalias)){
+                //Condición para devolver
+                correcto = true;
+                //Borrado del grupo
+                this.groupList.remove(OG);
+                //Salimos del bucle
+                break;
+            }
+        }
+        return correcto;
     }
 
     @Override
     public GroupMember addMember(String galias, String alias, String hostname) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        //buscamos usuarios por alias
+        GroupMember gm = null;
+        for(GroupMember member : memberList){
+                if(member.alias.equals(alias)) gm = member;
+        }
+        //buscamos entre todos los grupos
+        for(ObjectGroup OG : groupList){
+            //si existe el grupo con ese galias y el usuario no está en ese grupo
+            if(OG.galias.equals(galias) && !OG.members.contains(gm)){
+                //Añadimos al usuario con ese alias
+                OG.addMember(alias);
+                //public GroupMember(String alias, String hostname, int uid, int gid)
+                return new GroupMember(alias, gm.hostname, gm.uid, OG.gid);
+            }
+        }
+        return null;
     }
 
     @Override

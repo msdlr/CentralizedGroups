@@ -49,16 +49,16 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         
         /*CÓDIGO*/
         // Buscar si el grupo solicitado ya existe y devolver error
-        for(ObjectGroup OG : groupList){
-            if(OG.galias.equals(galias)) return -1;
+        for(ObjectGroup group : groupList){
+            if(group.galias.equals(galias)) return -1;
         }
         try{
             //Constructor del grupo:
             //public ObjectGroup(String galias, int gid, String oalias, int oid)
             
             //Encontramos el miembro con el hostname que se pasa por parámetro
-            for(GroupMember g : memberList){
-                if( g.hostname == ohostname ) nuevoOID = g.uid;
+            for(GroupMember member : memberList){
+                if( member.hostname == ohostname ) nuevoOID = member.uid;
             }
             //Generamos un nuevo identificador de grupo
             contadorID++;
@@ -74,7 +74,12 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
 
     @Override
     public int findGroup(String galias) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        for(ObjectGroup group : this.groupList){
+            //Si lo encuentra devuelve el id del grupo
+            if(group.galias.equals(galias)) return group.gid;
+        }
+        //Si no, devuelve -1
+        return -1;
     }
 
     @Override
@@ -109,9 +114,9 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public boolean StopMembers(String galias) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
+    
     @Override
-    public boolean AloowMembers(String gid) {
+    public boolean AllowMembers(String gid) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

@@ -41,18 +41,19 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         /* ENTRADA EN SECCIÓN CRÍTICA */
         this.mutex.lock();
         
-        /* VARIABLES */
-        //Objeto ObjectGroup a crear
-        ObjectGroup tmp;
-        //El campo oid del constructor de ServeGroup es el uid del usuario del que se pasa el hostname
-        int nuevoOID = 0;
-        
-        /*CÓDIGO*/
-        // Buscar si el grupo solicitado ya existe y devolver error
-        for(ObjectGroup group : groupList){
-            if(group.galias.equals(galias)) return -1;
-        }
         try{
+            /* VARIABLES */
+            //Objeto ObjectGroup a crear
+            ObjectGroup tmp;
+            //El campo oid del constructor de ServeGroup es el uid del usuario del que se pasa el hostname
+            int nuevoOID = 0;
+
+            /*CÓDIGO*/
+            // Buscar si el grupo solicitado ya existe y devolver error
+            for(ObjectGroup group : groupList){
+                if(group.galias.equals(galias)) return -1;
+            }
+        
             //Constructor del grupo:
             //public ObjectGroup(String galias, int gid, String oalias, int oid)
             
@@ -74,27 +75,43 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
 
     @Override
     public int findGroup(String galias) {
-        for(ObjectGroup group : this.groupList){
+        //BLoqueo para acceso concurrente
+        this.mutex.lock();
+        
+        try{
+            for(ObjectGroup group : this.groupList){
             //Si lo encuentra devuelve el id del grupo
             if(group.galias.equals(galias)) return group.gid;
         }
         //Si no, devuelve -1
         return -1;
+        }
+        finally{
+            this.mutex.unlock();
+        }
+        
     }
 
     @Override
     public String findGroup(int gid) {
-        for(ObjectGroup OG : groupList){
+        this.mutex.lock();
+        try{
+            for(ObjectGroup OG : groupList){
             if( OG.gid == gid ) return OG.galias;
         }
-        return null;
+            return null;
+        }
+        finally{
+            this.mutex.unlock();
+        }
     }
 
     @Override
     public boolean removeGroup(String galias, String oalias) {
         boolean correcto=false;
-        
-        for(ObjectGroup OG : groupList){
+        this.mutex.lock();
+        try{
+            for(ObjectGroup OG : groupList){
             //si encontramos el grupo que cumpla los parámetros
             if (OG.galias.equals(galias) && OG.oalias.equals(oalias)){
                 //Condición para devolver
@@ -105,12 +122,19 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
                 break;
             }
         }
-        return correcto;
+            return correcto;
+        }
+        finally{
+            this.mutex.unlock();
+        }
     }
 
     @Override
     public GroupMember addMember(String galias, String alias, String hostname) {
-        //buscamos usuarios por alias
+        this.mutex.lock();
+        
+        try{
+            //buscamos usuarios por alias
         GroupMember gm = null;
         for(GroupMember member : memberList){
                 if(member.alias.equals(alias)) gm = member;
@@ -126,11 +150,41 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             }
         }
         return null;
+        }
+        finally{
+            this.mutex.lock();
+        }
     }
 
     @Override
     public boolean removeMember(String galias, String alias) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.mutex.lock();
+        try{
+            //Buscamos el grupo por alias
+            for(ObjectGroup OG : groupList){
+            //si existe el grupo con ese galias y el usuario no está en ese grupo
+                if(OG.galias.equals(galias)){
+                    //Si el grupo existe
+                    //Comprobamos si el dueño tiene el oalias del parámetro
+                    if(OG.oalias.equals(alias)) return false;
+                    //Si no es el oalias, miramos si es miembro
+                    else{
+                        //Buscamos al miembro en el grupo y lo borramos si existe
+                        for(GroupMember gm : OG.members){
+                            //Comprobamos si está en el grupo
+                            if(gm.alias.equals(alias)) OG.members.remove(gm);
+                            return true;
+                        }
+                    }
+                }
+            }
+        //Si el grupo no existe o el usuario con el alias no está dentro
+        return false;
+        }
+        finally{
+            this.mutex.unlock();
+        }
+        
     }
 
     @Override
@@ -158,4 +212,37 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
+    /* FUNCIONES NUEVAS */
+    
+    /*
+        Estas funciones buscan grupos y miembros tanto por id como por alias
+        Devuelven -1 si no se encuentra; si se encuentra devuelven el índice en las listas
+    */
+    private int getGroup(int gid){
+        for(ObjectGroup OG : this.groupList){
+            if(OG.gid == gid) return this.groupList.indexOf(OG);
+        }
+        return -1;
+    }
+    
+    private int getGroup(String galias){
+        for(ObjectGroup OG : this.groupList){
+            if(OG.galias.equals(galias)) this.groupList.indexOf(OG);
+        }
+        return -1;
+    }
+    
+    private int getMember(String alias){
+        for(GroupMember member : memberList){
+            if(member.alias.equals(alias)) return this.memberList.indexOf(member);
+        }
+        return -1;
+    }
+    
+    private int getMember(int uid){
+        for(GroupMember member : memberList){
+            if(member.uid == uid) return this.memberList.indexOf(member);
+        }
+        return -1;
+    }
 }

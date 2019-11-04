@@ -5,11 +5,16 @@
  */
 package CentralizedGroups;
 
+import java.net.MalformedURLException;
+import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -33,7 +38,37 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public GroupServer() throws RemoteException {
         this.groupList = new LinkedList();
     }
+    
+    /* MAIN */
+    public static void main(String args[]) throws RemoteException {
+        System.setProperty("java.security.policy", "C:\\Users\\Usuario\\Desktop\\seguridad.txt");
 
+        GroupServer server = new GroupServer();
+        
+        //Estableer gestor de seguridad
+        if (System.getSecurityManager() == null) {
+                System.setSecurityManager(new SecurityManager());  
+        }
+        System.out.println("Establecido gestor de seguridad");
+        
+        //Lanzar registro sobre el puerto 1099
+        LocateRegistry.createRegistry(1099);
+        
+        //Inscribir el servidor en el registro
+        try {
+            Naming.rebind("GroupServer", server);
+            System.out.println("Servidor lanzado correctamente");
+        } catch (MalformedURLException e) {
+            System.out.println("Error al hacer rebind");
+        } catch (RemoteException ex){
+            System.out.println("Error al lanzar el registro");
+        }
+        
+
+
+    }
+    
+    /* FUNCIONES DE LA INTERFAZ */
     @Override
     public int createGroup(String galias, String oalias, String ohostname) {
         /* ENTRADA EN SECCIÓN CRÍTICA */

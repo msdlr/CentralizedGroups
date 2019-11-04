@@ -23,9 +23,9 @@ import java.util.logging.Logger;
 public class GroupServer extends UnicastRemoteObject implements GroupServerInterface {
     /* ATRIBUTOS */
     //Lista de grupos que maneja
-    private LinkedList<ObjectGroup> groupList;
+    private LinkedList<ObjectGroup> groupList = new LinkedList();
     //Lista de miembros
-    private LinkedList<GroupMember> memberList;
+    private LinkedList<GroupMember> memberList = new LinkedList();
     //Cerrojos para funciones de grupos
     Lock mutex = new ReentrantLock();
     //Contador para generar identificadores de grupo y usuario
@@ -36,19 +36,25 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     
     /* CONSTRUCTOR */
     public GroupServer() throws RemoteException {
-        this.groupList = new LinkedList();
-    }
-    
-    /* MAIN */
-    public static void main(String args[]) throws RemoteException {
-        System.setProperty("java.security.policy", "C:\\Users\\Usuario\\Desktop\\seguridad.txt");
+        //Exportar sevidor
+        super();
 
-        GroupServer server = new GroupServer();
+        //Inicializar listas
+        this.groupList = new LinkedList();
+        this.memberList = new LinkedList();
         
         //Estableer gestor de seguridad
         if (System.getSecurityManager() == null) {
                 System.setSecurityManager(new SecurityManager());  
         }
+    }
+    
+    /* MAIN */
+    public static void main(String args[]) throws RemoteException {
+        //Fichero de política
+        System.setProperty("java.security.policy", "C:\\Users\\Usuario\\Desktop\\seguridad.txt");
+        GroupServer server = new GroupServer();
+        
         System.out.println("Establecido gestor de seguridad");
         
         //Lanzar registro sobre el puerto 1099
@@ -63,9 +69,6 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         } catch (RemoteException ex){
             System.out.println("Error al lanzar el registro");
         }
-        
-
-
     }
     
     /* FUNCIONES DE LA INTERFAZ */
@@ -342,10 +345,10 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         return -1;
     }
     
-    private int getMember(int uid){
-        for(GroupMember member : memberList){
-            if(member.uid == uid) return this.memberList.indexOf(member);
-        }
-        return -1;
-    }
+//    private int getMember(int uid){
+//        for(GroupMember member : memberList){
+//            if(member.uid == uid) return this.memberList.indexOf(member);
+//        }
+//        return -1;
+//    }
 }

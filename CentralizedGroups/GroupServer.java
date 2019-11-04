@@ -190,7 +190,24 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
 
     @Override
     public GroupMember isMember(String galias, String alias) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.mutex.lock();
+        try{
+            //return this.groupList.get(getGroup galias).memberList.contains(this.memberList.get(alias));
+            int buscarGrupo, buscarMiembro;
+            buscarGrupo = getGroup(galias);
+            buscarMiembro = getMember(alias);
+
+            //Si el grupo no existe
+            if(buscarGrupo == -1) return null;
+            boolean member = this.groupList.get(buscarGrupo).members.contains(this.memberList.get(buscarMiembro));
+            //Si es miembro se devuelve el GroupMember
+            if (member) return this.memberList.get(buscarMiembro);
+            //Si n se devuelve null
+            else return null;
+        }
+        finally{
+            this.mutex.unlock();
+        }
     }
 
     @Override

@@ -8,11 +8,8 @@ package CentralizedGroups;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -222,15 +219,39 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
 
     @Override
     public LinkedList<String> ListMembers(String galias) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.mutex.lock();
+        try{
+            int buscarGrupo = getGroup(galias);
+            LinkedList lista = new LinkedList<String>();
+
+            //Si el grupo no existe
+            if(buscarGrupo == -1){
+                return null;
+            }
+            else{
+                //Si el grupo existe, recorremos su lista de miembros
+                for(GroupMember GM : this.groupList.get(buscarGrupo).members){
+                    lista.add(GM.hostname);
+                }
+            }
+            return lista;
+        }
+        finally{
+            this.mutex.unlock();
+        }
     }
 
     @Override
     public LinkedList<String> ListGroup() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        LinkedList grupos = new LinkedList<String>();
+        
+        for(ObjectGroup OG : this.groupList){
+            grupos.add(OG.galias);
+        }
+        return grupos;
     }
     
-    /* FUNCIONES NUEVAS */
+    /* FUNCIONES AUXILIARES */
     
     /*
         Estas funciones buscan grupos y miembros tanto por id como por alias

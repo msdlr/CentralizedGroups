@@ -5,11 +5,16 @@
  */
 package CentralizedGroups;
 
+import java.net.MalformedURLException;
+import java.rmi.Naming;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -18,9 +23,9 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GroupServer extends UnicastRemoteObject implements GroupServerInterface {
     /* ATRIBUTOS */
     //Lista de grupos que maneja
-    private LinkedList<ObjectGroup> groupList;
+    private LinkedList<ObjectGroup> groupList = new LinkedList();
     //Lista de miembros
-    private LinkedList<GroupMember> memberList;
+    private LinkedList<GroupMember> memberList = new LinkedList();
     //Cerrojos para funciones de grupos
     Lock mutex = new ReentrantLock();
     //Contador para generar identificadores de grupo y usuario
@@ -31,9 +36,42 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     
     /* CONSTRUCTOR */
     public GroupServer() throws RemoteException {
-        this.groupList = new LinkedList();
-    }
+        //Exportar sevidor
+        super();
 
+        //Inicializar listas
+        this.groupList = new LinkedList();
+        this.memberList = new LinkedList();
+        
+        //Estableer gestor de seguridad
+        if (System.getSecurityManager() == null) {
+                System.setSecurityManager(new SecurityManager());  
+        }
+    }
+    
+    /* MAIN */
+    public static void main(String args[]) throws RemoteException {
+        //Fichero de política
+        System.setProperty("java.security.policy", "C:\\Users\\Usuario\\Desktop\\seguridad.txt");
+        GroupServer server = new GroupServer();
+        
+        System.out.println("Establecido gestor de seguridad");
+        
+        //Lanzar registro sobre el puerto 1099
+        LocateRegistry.createRegistry(1099);
+        
+        //Inscribir el servidor en el registro
+        try {
+            Naming.rebind("GroupServer", server);
+            System.out.println("Servidor lanzado correctamente");
+        } catch (MalformedURLException e) {
+            System.out.println("Error al hacer rebind");
+        } catch (RemoteException ex){
+            System.out.println("Error al lanzar el registro");
+        }
+    }
+    
+    /* FUNCIONES DE LA INTERFAZ */
     @Override
     public int createGroup(String galias, String oalias, String ohostname) {
         /* ENTRADA EN SECCIÓN CRÍTICA */
@@ -307,10 +345,10 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         return -1;
     }
     
-    private int getMember(int uid){
-        for(GroupMember member : memberList){
-            if(member.uid == uid) return this.memberList.indexOf(member);
-        }
-        return -1;
-    }
+//    private int getMember(int uid){
+//        for(GroupMember member : memberList){
+//            if(member.uid == uid) return this.memberList.indexOf(member);
+//        }
+//        return -1;
+//    }
 }

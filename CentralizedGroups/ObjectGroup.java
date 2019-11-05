@@ -66,7 +66,7 @@ public class ObjectGroup {
             return members.getLast();
 
         } catch (InterruptedException e) {
-            System.out.println(e.getStackTrace());
+            e.printStackTrace();
         }
         return null;
     }
@@ -86,7 +86,7 @@ public class ObjectGroup {
             return true;
 
         } catch (InterruptedException e) {
-            System.out.println(e.getStackTrace());
+            e.printStackTrace();
         }
         return false;
     }

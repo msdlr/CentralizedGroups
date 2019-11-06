@@ -265,7 +265,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public boolean AllowMembers(String gid) {
         this.mutex.lock();
         try{
-            int iGrupo = gIndex(gid);
+            int iGrupo = gIndex(Integer.getInteger(gid));
             if(iGrupo == -1){
                 //Si el grupo no existe
                 return false;

@@ -12,6 +12,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -81,18 +82,25 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                 case "3":
                     modGroup(scanner, proxy);
                     break;
-                case "":
-                    
                 case "4":
-                    func4(host, registro, proxy);
-
-                default:
-                    System.out.println("Error, saliendo");
+                    allowOrDeny(proxy);
                     break;
+                case "5":
+                    groupMembers(proxy);
+                    break;
+                case "6":
+                    listGroups(proxy);
+                    break;
+                case "7":
+                    exit(0);
+                    break;
+                default:
+                    //Se vuelve a mostrar el menú
+                    continue;
             }
         }
     }
-    private static void func4(String host, Registry registro, GroupServerInterface proxy){
+    private static void allowOrDeny(GroupServerInterface proxy){
         //Variables
         String st = "";
         Scanner s = new Scanner(System.in);
@@ -121,12 +129,12 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                 case "D":
                 case "d":
                     proxy.AllowMembers(st);
-                    System.out.println("Bloqueadas las altas/bajas en el grupo");
+                    System.out.println("Bloqueadas las altas/bajas en el grupo " + st);
                     break;
                 case "B":
                 case "b":
                     proxy.StopMembers(st);
-                    System.out.println("Bloqueadas las altas/bajas en el grupo");
+                    System.out.println("Bloqueadas las altas/bajas en el grupo " + st);
                     break;
                 default:
                     System.out.println("ERROR");
@@ -171,5 +179,39 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         } else if (option.equals("b")) {
             // TODO
         } else System.out.println("opción inválida");
+    }
+    
+    private static void groupMembers(GroupServerInterface proxy) {
+        /*
+        mostrar miembros de un grupo
+        */
+        String st ="";
+        Scanner scanner = new Scanner(System.in);
+        LinkedList<String> namesList;
+        
+        System.out.println("Introduce el alias del grupo");
+        st = scanner.nextLine();
+        System.out.println("Buscando el grupo con alias \"" + st + "\"");
+        namesList = proxy.ListMembers(st);
+        
+        if(namesList == null){
+            System.out.println("El grupo" +st+ " no existe");
+        }else{
+            System.out.println(namesList.toString());
+        }
+        
+    }
+
+    private static void listGroups(GroupServerInterface proxy) {
+        /*
+        mostrar grupos actuales
+        */
+        LinkedList<String> list = proxy.ListGroup();
+        if(list.isEmpty()){
+            System.out.println("No hay grupos en este servidor");
+        }
+        else{
+            System.out.println(list.toString());
+        }
     }
 }

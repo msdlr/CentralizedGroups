@@ -53,6 +53,11 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         System.setProperty("java.security.policy", "C:\\Users\\Usuario\\Desktop\\seguridad.txt");
         GroupServer server = new GroupServer();
        
+        //Si no se ejecuta aquí da excepción
+        if (System.getSecurityManager() == null) {
+                System.setSecurityManager(new SecurityManager());  
+        }
+        
         //Lanzar registro sobre el puerto 1099
         //Inscribir el servidor en el registro
         try {

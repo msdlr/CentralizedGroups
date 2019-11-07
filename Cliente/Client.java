@@ -7,6 +7,10 @@ package Cliente;
 
 import CentralizedGroups.GroupServerInterface;
 import static java.lang.System.exit;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.UnknownHostException;
+import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -24,11 +28,15 @@ import javax.rmi.CORBA.Stub;
  */
 public class Client extends UnicastRemoteObject implements ClientInterface {
 
-    Client() throws RemoteException {}
+    Client() throws RemoteException {
+        //Se exporta para para los callbacks de la práctica 4
+        super();
+    }
 
     public static void main(String[] args) {
         //Localizar el servidor en el registro
         String host = null;
+        String url = "";
         //Registro donde buscar el servidor
         Registry registro = null;
         //Proxy para los métodos del servidor
@@ -38,31 +46,71 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         String command = "";
         boolean menu = true;
 
+        //Objtener gestor de seguridad
+        if (System.getSecurityManager() == null) System.setSecurityManager(new SecurityManager());
+        //Asignar fichero de seguridad
+        //System.setProperty("java.security.policy", "All Files	C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
+        
+        try {
+            //Registro para el callback de la Práctica 4
+            Registry registry = LocateRegistry.getRegistry(1098);
+            System.out.println("Registro lanzado correctamente");
+        } catch (RemoteException ex) {
+            System.out.println("Error al lanzar el registro");
+        }
+        
+        try {
+            //Objeto de la clase cliente
+            Client c = new Client();
+            System.out.println("Cliente creado correctamente");
+        } catch (RemoteException ex) {
+            System.out.println("Error iniciando el cliente");
+        }
+        
+        try {
+            //Conseguir hostname local
+            System.out.println("Consiguiendo hostname local...");
+            System.out.println("HOSTNAME: "+InetAddress.getLocalHost().getHostName());
+        } catch (UnknownHostException ex) {
+            System.out.println("No se pudo obtener el hostname local");
+        }
+        
         /* establecer conexion remota o local */
         System.out.println("Conexión remota o local? (l/<dir. ip>)");
         command = scanner.nextLine();
         if (command.equals("l")) {
-            host = "127.0.0.1";
+            url="//127.0.0.1/GroupServer";
         } else {
             host = command;
+            url="//"+host+"/GroupServer";
         }
         /* inicializar registro */
         try {
             registro = LocateRegistry.getRegistry(host);
+            System.out.println("Registro obtenido correctamente");
         } catch (RemoteException e) {
             System.out.println("ERROR inicializando registro");
         }
+        
         /* creacion de proxy */
         try {
-            proxy = (GroupServerInterface) registro.lookup("GroupServer");
+            proxy = (GroupServerInterface) Naming.lookup("//127.0.0.1/GroupServer");
         } catch (RemoteException ex) {
-            System.out.println("ERROR en creacion de proxy (RemoteException)");
+            System.out.println("No se ha podido contactar con el registro");
+            exit(-1);
         } catch (NotBoundException ex) {
-            System.out.println("ERROR en creacion de proxy (NotBoundException)");;
+            System.out.println("Name not bound");
+            exit(-1);
+        } catch (MalformedURLException ex) {
+            System.out.println("Error en la dirección del server");
+            exit(-1);
+        }catch (java.security.AccessControlException ex){
+            System.out.println("No se cumple la política de seguridad");
+            exit(-1);
         }
-
+        
         /* menu */
-        System.out.println("Opciones disponibles:");
+        if(menu)System.out.println("Opciones disponibles:");
         while (menu) {
             System.out.println("1: crear grupo\n"
                     + "2: eliminar grupo\n"

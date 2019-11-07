@@ -25,7 +25,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     //Lista de miembros
     private LinkedList<GroupMember> memberList = new LinkedList();
     //Cerrojos para funciones de grupos
-    Lock mutex = new ReentrantLock();
+    Lock mutex;
     //Contador para generar identificadores de grupo y usuario
     private int groupCounter = 0;
     private int memberCounter = 0;
@@ -45,6 +45,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         //Inicializar listas
         this.groupList = new LinkedList();
         this.memberList = new LinkedList();
+        this.mutex = new ReentrantLock(true); //con true la cola es fifo
     }
     
     /* MAIN */

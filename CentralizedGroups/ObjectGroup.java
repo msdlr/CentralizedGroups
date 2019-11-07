@@ -17,17 +17,16 @@ public class ObjectGroup {
 
     String galias;
     String oalias;
-    int gid;
-    /* group id */
-    int oid;
-    /* owner id */
+    int gid;    /* group id */
+    int oid;    /* owner id */
     private int counter;
     LinkedList<GroupMember> members;
 
     /* estructuras para bloqueo */
+    int waiting = 0;
+    boolean locked = false;
     ReentrantLock l = new ReentrantLock(true);
-    Condition allowInsert = l.newCondition();
-    Condition allowDelete = l.newCondition();
+    Condition allowMod = l.newCondition();
 
     public ObjectGroup(String galias, int gid, String oalias, int oid) {
         this.galias = galias;
@@ -50,11 +49,19 @@ public class ObjectGroup {
 
     public GroupMember addMember(String alias) {
         /* TODO: control de bloqueo */
+        l.lock();
         try {
-            while (l.isLocked()) {
-                allowInsert.await();
+    //        /* si las altas y bajas estan bloqueadas, esperar a que se
+    //           desbloqueen                                             */
+    //        while (locked) {
+    //            allowMod.await();
+    //        }
+            /* salir de la función si las altas y bajas estan bloqueadas */
+            if (locked) {
+                System.out.println("Las altas y bajas de miembros se encuentran "
+                        + "bloqueadas en este momento.\n");
+                return null;
             }
-
             /* si ya existe un miembro con el mismo alias, devolver null */
             if (isMember(alias) != null) {
                 return null;
@@ -63,42 +70,56 @@ public class ObjectGroup {
             members.add(new GroupMember(alias, oalias, counter, gid));
             /* una vez añadido, incrementar contador y devolver miembro */
             counter++;
-            return members.getLast();
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            return isMember(alias);    /* si la adición ha fallado, devuelve null */
+    //    } catch (InterruptedException e) {
+    //        System.out.println("ERROR esperando a desbloqueo");
+    //        return null;
+    //    }
+        } finally {
+            l.unlock();
         }
-        return null;
     }
 
-    public boolean removeMember(String ualias) {
+    public boolean removeMember(String alias) {
         /* TODO: control de bloqueo */
+        l.lock();
         try {
-            while (l.isLocked()) {
-                allowDelete.await();
+            /* si las altas y bajas estan bloqueadas, esperar a que se 
+               desbloqueen                                             */
+            while (locked) {
+                allowMod.await();
             }
-
-            /* si no existe el miembro o es el propietario, devolver null */
-            if (isMember(ualias) == null || oalias.equals(ualias)) {
+            /* si no existe el miembro o es el propietario, devolver false */
+            if (isMember(alias) == null || oalias.equals(alias)) {
                 return false;
             }
-            members.remove(isMember(ualias));
-            return true;
-
+            /* si no hay fallos quitandolo de la lista, devuelve true */
+            return members.remove(isMember(alias));
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.out.println("ERROR esperando a desbloqueo");
+            return false;
+        } finally {
+            l.unlock();
         }
-        return false;
     }
 
     public void StopMembers() {
         l.lock();
+        try {
+            locked = true;
+        } finally {
+            l.unlock();
+        }
     }
 
     public void AllowMembers() {
-        allowInsert.signalAll();
-        allowDelete.signalAll();
-        l.unlock();
+        l.lock();
+        try {
+            locked = false;
+            allowMod.signalAll();    /* desbloquear clientes bloqueados */
+        } finally {
+            l.unlock();
+        }
     }
 
     public LinkedList<String> ListMembers() {

@@ -49,7 +49,8 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         //Objtener gestor de seguridad
         if (System.getSecurityManager() == null) System.setSecurityManager(new SecurityManager());
         //Asignar fichero de seguridad
-        //System.setProperty("java.security.policy", "All Files	C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
+        //System.setProperty("java.security.policy", "C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
+        //System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralisedGroups/src/Cliente/seguridad.txt");
         
         try {
             //Registro para el callback de la Práctica 4
@@ -200,7 +201,10 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         oalias = scanner.nextLine();
         System.out.println("Hostname del propietario:");
         ohostname = scanner.nextLine();
-        proxy.createGroup(galias, oalias, ohostname);
+        if (proxy.createGroup(galias, oalias, ohostname) != 0) {
+            System.out.println("ERROR al crear el grupo");
+            return;
+        }
         System.out.println("Grupo " + galias + " creado");
     }
     

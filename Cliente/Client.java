@@ -49,14 +49,15 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         Scanner scanner = new Scanner(System.in);
         String command = "";
         boolean menu = true;
-
+        
+        //Asignar fichero de seguridad
+        System.setProperty("java.security.policy", "C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
+        //System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralisedGroups/src/Cliente/seguridad.txt");
+        
         //Objtener gestor de seguridad
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new SecurityManager());
         }
-        //Asignar fichero de seguridad
-        //System.setProperty("java.security.policy", "C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
-        //System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralisedGroups/src/Cliente/seguridad.txt");
 
         try {
             //Registro para el callback de la Práctica 4

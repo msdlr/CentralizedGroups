@@ -162,7 +162,11 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         st = s.nextLine();
         System.out.println("Buscando grupo"+st);
         
-        gid = proxy.findGroup(galias);
+        try {
+            gid = proxy.findGroup(galias);
+        } catch (RemoteException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
         if(gid == -1){
             //Si el grupo no se ha encontrado
             System.out.println("Grupo " + galias + " no encontrado");
@@ -177,12 +181,24 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
             switch(st){
                 case "D":
                 case "d":
+            {
+                try {
                     proxy.AllowMembers(st);
+                } catch (RemoteException ex) {
+                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
                     System.out.println("Bloqueadas las altas/bajas en el grupo " + st);
                     break;
                 case "B":
                 case "b":
+            {
+                try {
                     proxy.StopMembers(st);
+                } catch (RemoteException ex) {
+                    Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
                     System.out.println("Bloqueadas las altas/bajas en el grupo " + st);
                     break;
                 default:
@@ -201,7 +217,11 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         oalias = scanner.nextLine();
         System.out.println("Hostname del propietario:");
         ohostname = scanner.nextLine();
-        proxy.createGroup(galias, oalias, ohostname);
+        try {
+            proxy.createGroup(galias, oalias, ohostname);
+        } catch (RemoteException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
         System.out.println("Grupo " + galias + " creado");
     }
     
@@ -212,7 +232,11 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         galias = scanner.nextLine();
         System.out.println("Alias del propietario:");
         oalias = scanner.nextLine();
-        proxy.removeGroup(galias, oalias);
+        try {
+            proxy.removeGroup(galias, oalias);
+        } catch (RemoteException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
         System.out.println("Grupo " + galias + " eliminado");
     }
     
@@ -236,12 +260,16 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         */
         String st ="";
         Scanner scanner = new Scanner(System.in);
-        LinkedList<String> namesList;
+        LinkedList<String> namesList = null;
         
         System.out.println("Introduce el alias del grupo");
         st = scanner.nextLine();
         System.out.println("Buscando el grupo con alias \"" + st + "\"");
-        namesList = proxy.ListMembers(st);
+        try {
+            namesList = proxy.ListMembers(st);
+        } catch (RemoteException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
         if(namesList == null){
             System.out.println("El grupo" +st+ " no existe");
@@ -255,7 +283,12 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         /*
         mostrar grupos actuales
         */
-        LinkedList<String> list = proxy.ListGroup();
+        LinkedList<String> list = null;
+        try {
+            list = proxy.ListGroup();
+        } catch (RemoteException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
         if(list.isEmpty()){
             System.out.println("No hay grupos en este servidor");
         }

@@ -51,8 +51,8 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     /* MAIN */
     public static void main(String args[]) throws RemoteException {
         //Fichero de política
-        //System.setProperty("java.security.policy", "C:\\Users\\Usuario\\Desktop\\seguridad.txt");
         System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralisedGroups/src/CentralizedGroups/seguridad.txt");
+        //System.setProperty("java.security.policy", "C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\CentralizedGroups\\seguridad.txt");
         GroupServer server = new GroupServer();
        
         //Si no se ejecuta aquí da excepción

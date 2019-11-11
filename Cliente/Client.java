@@ -20,7 +20,6 @@ import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.rmi.CORBA.Stub;
 
 /**
  *
@@ -78,14 +77,14 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         }
         
         /* establecer conexion remota o local */
-        System.out.println("Conexión remota o local? (l/<dir. ip>)");
-        command = scanner.nextLine();
-        if (command.equals("l")) {
-            url="//127.0.0.1/GroupServer";
-        } else {
-            host = command;
-            url="//"+host+"/GroupServer";
-        }
+//        System.out.println("Conexión remota o local? (l/<dir. ip>)");
+//        command = scanner.nextLine();
+//        if (command.equals("l")) {
+//            url="//127.0.0.1/GroupServer";
+//        } else {
+//            host = command;
+//            url="//"+host+"/GroupServer";
+//        }
         /* inicializar registro */
         try {
             registro = LocateRegistry.getRegistry(host);

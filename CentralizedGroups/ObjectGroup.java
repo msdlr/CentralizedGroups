@@ -33,8 +33,11 @@ public class ObjectGroup {
         this.oalias = oalias;
         this.gid = gid;
         this.oid = oid;
-        this.counter = 1;
-        addMember(oalias);
+        counter = 1;
+        //addMember(oalias);
+        GroupMember member = new GroupMember(oalias, oalias, counter, gid);
+        members.add(member);
+        counter++;
     }
 
     public GroupMember isMember(String alias) {

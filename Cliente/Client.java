@@ -27,6 +27,10 @@ import javax.rmi.CORBA.Stub;
  * @author Miguel
  */
 public class Client extends UnicastRemoteObject implements ClientInterface {
+        
+    // Propiedades de usuario
+    static String alias;
+    static String hostname;
 
     Client() throws RemoteException {
         //Se exporta para para los callbacks de la práctica 4
@@ -108,6 +112,15 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         }catch (java.security.AccessControlException ex){
             System.out.println("No se cumple la política de seguridad");
             exit(-1);
+        }
+        
+        /* obtencion de alias y hostname */
+        System.out.println("Introduzca su alias:");
+        alias = scanner.nextLine();
+        try {
+            hostname = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException ex) {
+            System.out.println("ERROR obteniendo hostname");
         }
         
         /* menu */
@@ -193,15 +206,11 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
     }
     
     public static void createGroup(Scanner scanner, GroupServerInterface proxy) {
+        // supone que alias y hostname se obtienen al principio del main
         System.out.println("Creando grupo...");
-        String galias, oalias, ohostname;
         System.out.println("Alias del grupo:");
-        galias = scanner.nextLine();
-        System.out.println("Alias del propietario:");
-        oalias = scanner.nextLine();
-        System.out.println("Hostname del propietario:");
-        ohostname = scanner.nextLine();
-        if (proxy.createGroup(galias, oalias, ohostname) != 0) {
+        String galias = scanner.nextLine();
+        if (proxy.createGroup(galias, alias, hostname) != 0) {
             System.out.println("ERROR al crear el grupo");
             return;
         }
@@ -210,27 +219,42 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
     
     public static void deleteGroup(Scanner scanner, GroupServerInterface proxy) {
         System.out.println("eliminando grupo...");
-        String galias, oalias;
+        String galias;
         System.out.println("Alias del grupo:");
         galias = scanner.nextLine();
-        System.out.println("Alias del propietario:");
-        oalias = scanner.nextLine();
-        proxy.removeGroup(galias, oalias);
-        System.out.println("Grupo " + galias + " eliminado");
+        if (proxy.ListMembers(galias).getFirst().equals(alias));
+        if (!proxy.removeGroup(galias, alias)) {
+            System.out.println("ERROR al borrar grupo");
+        } else System.out.println("Grupo " + galias + " eliminado");
     }
     
     public static void modGroup(Scanner scanner, GroupServerInterface proxy) {
-        System.out.println("modificando miembros...");
-        String option, galias, oalias;
+        // supone que alias se obtiene al principio del main
+        String option, galias;
         System.out.println("Alias del grupo:");
         galias = scanner.nextLine();
-        System.out.println("Añadir o borrar miembro? (a/b)");
-        option = scanner.nextLine();
-        if (option.equals("a")) {
-            // TODO
-        } else if (option.equals("b")) {
-            // TODO
-        } else System.out.println("opción inválida");
+        if (proxy.isMember(galias, alias) != null) {
+            System.out.println("Ya estás en el grupo " + galias + ", salir de él? (s/n)");
+            option = scanner.nextLine();
+            if (option.equals("s")) {
+                if (!proxy.removeMember(galias, alias)) {
+                    System.out.println("ERROR al salir de grupo");
+                } else System.out.println("Se ha salido del grupo con éxito");
+            } else if (option.equals("n")) {
+                System.out.println("Operación cancelada");
+            }
+        } else {
+            System.out.println("Unirte al grupo " + galias + "? (s/n)");
+            option = scanner.nextLine();
+            if (option.equals("s")) {
+                if (proxy.addMember(galias, alias, hostname) == null) {
+                    System.out.println("ERROR al unirse a grupo");
+                } else System.out.println("Se ha unido al grupo con éxito");
+            } else if (option.equals("n")) {
+                System.out.println("Operación cancelada");
+            }
+        }
+        
     }
     
     private static void groupMembers(GroupServerInterface proxy) {

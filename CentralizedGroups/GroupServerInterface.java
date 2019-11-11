@@ -5,22 +5,24 @@
  */
 package CentralizedGroups;
 
+import java.rmi.Remote;
+import java.rmi.RemoteException;
 import java.util.LinkedList;
 
 /**
  *
  * @author Miguel
  */
-public interface GroupServerInterface {
-    int createGroup (String galias, String oalias, String ohostname);
-    int findGroup (String galias);
-    String findGroup (int gid);
-    boolean removeGroup (String galias, String oalias);
-    GroupMember addMember (String galias, String alias, String hostname);
-    boolean removeMember (String galias, String alias);
-    GroupMember isMember (String galias, String alias);
-    boolean StopMembers (String galias);
-    boolean AllowMembers (String gid);
-    LinkedList<String> ListMembers (String galias);
-    LinkedList<String> ListGroup();
+public interface GroupServerInterface extends Remote {
+    int createGroup (String galias, String oalias, String ohostname) throws RemoteException;
+    int findGroup (String galias) throws RemoteException;
+    String findGroup (int gid) throws RemoteException;
+    boolean removeGroup (String galias, String oalias) throws RemoteException;
+    GroupMember addMember (String galias, String alias, String hostname) throws RemoteException;
+    boolean removeMember (String galias, String alias) throws RemoteException;
+    GroupMember isMember (String galias, String alias) throws RemoteException;
+    boolean StopMembers (String galias) throws RemoteException;
+    boolean AllowMembers (String gid) throws RemoteException;
+    LinkedList<String> ListMembers (String galias) throws RemoteException;
+    LinkedList<String> ListGroup() throws RemoteException;
 }

@@ -107,7 +107,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         this.mutex.lock();
         
         try{
-            int iGrupo = findGroup(galias);
+            int iGrupo = gIndex(galias);
             if(iGrupo == -1){
                 //Si el grupo no exite se devuelve -1
                 return -1;

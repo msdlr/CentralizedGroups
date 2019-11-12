@@ -87,7 +87,8 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         System.out.println("Conexión remota o local? (l/<dir. ip>)");
         command = scanner.nextLine();
         if (command.equals("l")) {
-            url = "//127.0.0.1/GroupServer";
+            host="localhost";
+            url = "//localhost/GroupServer";
         } else {
             host = command;
             url = "//" + host + "/GroupServer";
@@ -95,14 +96,14 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         /* inicializar registro */
         try {
             registro = LocateRegistry.getRegistry(host);
-            System.out.println("Registro obtenido correctamente");
+            System.out.println("Registro de " + host +" obtenido correctamente");
         } catch (RemoteException e) {
             System.out.println("ERROR inicializando registro");
         }
 
         /* creacion de proxy */
         try {
-            proxy = (GroupServerInterface) Naming.lookup("//"+ host +"/GroupServer");
+            proxy = (GroupServerInterface) Naming.lookup(url);
         } catch (RemoteException ex) {
             System.out.println("No se ha podido contactar con el registro");
             exit(-1);

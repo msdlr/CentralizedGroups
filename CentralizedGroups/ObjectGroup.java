@@ -33,6 +33,7 @@ public class ObjectGroup {
         this.oalias = oalias;
         this.gid = gid;
         this.oid = oid;
+        this.members = new LinkedList();
         counter = 1;
         //addMember(oalias);
         GroupMember member = new GroupMember(oalias, oalias, counter, gid);

@@ -51,7 +51,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         boolean menu = true;
         
         //Asignar fichero de seguridad
-        System.setProperty("java.security.policy", "C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
+        System.setProperty("java.security.policy", "C:\\Users\\usuario\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
         //System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralisedGroups/src/Cliente/seguridad.txt");
         
         //Objtener gestor de seguridad
@@ -102,7 +102,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
         /* creacion de proxy */
         try {
-            proxy = (GroupServerInterface) Naming.lookup("//127.0.0.1/GroupServer");
+            proxy = (GroupServerInterface) Naming.lookup("//"+ host +"/GroupServer");
         } catch (RemoteException ex) {
             System.out.println("No se ha podido contactar con el registro");
             exit(-1);

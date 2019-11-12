@@ -176,7 +176,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             //Si el grupo no está en la lista
             if(iGrupo == -1) return null;
             //Si el miembro con ese alias ya está en ese grupo
-            else if ( this.mIndex(alias, galias) == -1 ){
+            else if ( this.mIndex(alias, galias) != -1 ){
                 return null;
             }
             //Si el grupo existe y el miembro no está en él ya
@@ -210,7 +210,8 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             //Si se intenta borrar cualquier otro miembro
             else{
                 iMiembro = mIndex(alias,galias);
-                this.groupList.get(iGrupo).members.remove( this.groupList.get(gIndex(galias)).members.get(iMiembro) );
+                if(iMiembro == -1) return false; //Si el usuario no está en este grupo
+                boolean remove = this.groupList.get(iGrupo).members.remove( this.groupList.get(gIndex(galias)).members.get(iMiembro) );
                 return true;
             }
         }
@@ -266,7 +267,8 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public boolean AllowMembers(String gid) {
         this.mutex.lock();
         try{
-            int iGrupo = gIndex(Integer.getInteger(gid));
+            Integer gidInt = Integer.getInteger(gid);
+            int iGrupo = gIndex( gidInt );
             if(iGrupo == -1){
                 //Si el grupo no existe
                 return false;

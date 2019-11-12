@@ -228,7 +228,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         System.out.println("Alias del grupo:");
         String galias = scanner.nextLine();
         try {
-            if (proxy.createGroup(galias, alias, hostname) != 0) {
+            if (proxy.createGroup(galias, alias, hostname) < 1) {
                 System.out.println("ERROR al crear el grupo");
                 return;
             }

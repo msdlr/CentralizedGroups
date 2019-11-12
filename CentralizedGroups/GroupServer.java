@@ -79,21 +79,19 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         this.mutex.lock();
         
         try{
-            /* VARIABLES */
-            //El campo oid del constructor de ServeGroup es el uid del usuario del que se pasa el hostname
-            int nuevoOID = 0;
-
-            /*CÓDIGO*/
             // Buscar si el grupo solicitado ya existe y devolver error
-            if(findGroup(galias) == -1) return -1;
+            if(findGroup(galias) == -1) {
+                //Si el grupo ya existe se devuelve error
+                return -1;
+            }
             
             //Generamos un nuevo identificador de grupo y de miembro
             this.groupCounter++;
             this.memberCounter++;
             //Creamos el nuevo grupo y le ponemos al usuario invocador como miembro
             //El nuevo propietario del grupo es el cliente invocador que se pasa por alias
-            ObjectGroup nGroup = new ObjectGroup(galias,groupCounter, oalias, nuevoOID);
-            nGroup.members.add( new GroupMember(oalias, ohostname, this.memberCounter, this.groupCounter) );
+            ObjectGroup nGroup = new ObjectGroup(galias,groupCounter, oalias, this.memberCounter);
+            //No hace falta añadir un nuevo GroupMember al grupo porque ya lo hace el constructor de ObjectGroup
             this.groupList.add(nGroup);
         }
         finally{
@@ -109,11 +107,13 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         this.mutex.lock();
         
         try{
-            int iGrupo = gIndex(galias);
+            int iGrupo = findGroup(galias);
             if(iGrupo == -1){
+                //Si el grupo no exite se devuelve -1
                 return -1;
             }
             else{
+                //Si existe se crea
                 return this.groupList.get(iGrupo).gid;
             }
         }
@@ -287,17 +287,17 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         this.mutex.lock();
         try{
             int iGrupo = gIndex(galias);
-            LinkedList lista = new LinkedList<String>();
+            LinkedList lista = new LinkedList();
 
             //Si el grupo no existe
-            if(iGrupo == -1){
+            if(findGroup(galias) == -1){
                 return null;
             }
             else{
                 //Si el grupo existe, recorremos su lista de miembros
-                for(GroupMember GM : this.groupList.get(iGrupo).members){
+                this.groupList.get(iGrupo).members.forEach((GM) -> {
                     lista.add(GM.hostname);
-                }
+                });
             }
             return lista;
         }

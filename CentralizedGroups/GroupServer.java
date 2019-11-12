@@ -264,11 +264,11 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
     
     @Override
-    public boolean AllowMembers(String gid) {
+    public boolean AllowMembers(String galias) {
         this.mutex.lock();
         try{
-            Integer gidInt = Integer.parseInt(gid);
-            int iGrupo = gIndex( gidInt );
+            //Buscamos el grupo con el alias especificado
+            int iGrupo = gIndex( galias );
             if(iGrupo == -1){
                 //Si el grupo no existe
                 return false;

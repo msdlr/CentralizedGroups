@@ -80,7 +80,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         
         try{
             // Buscar si el grupo solicitado ya existe y devolver error
-            if(findGroup(galias) == -1) {
+            if(findGroup(galias) != -1) {
                 //Si el grupo ya existe se devuelve error
                 return -1;
             }
@@ -296,7 +296,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             else{
                 //Si el grupo existe, recorremos su lista de miembros
                 this.groupList.get(iGrupo).members.forEach((GM) -> {
-                    lista.add(GM.hostname);
+                    lista.add(GM.alias);
                 });
             }
             return lista;
@@ -331,7 +331,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     
     private int gIndex(String galias){
         for(ObjectGroup OG : this.groupList){
-            if(OG.galias.equals(galias)) this.groupList.indexOf(OG);
+            if(OG.galias.equals(galias)) return this.groupList.indexOf(OG);
         }
         return -1;
     }

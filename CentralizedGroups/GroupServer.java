@@ -48,8 +48,8 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     /* MAIN */
     public static void main(String args[]) throws RemoteException {
         //Fichero de política
-        //System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralisedGroups/src/CentralizedGroups/seguridad.txt");
-        System.setProperty("java.security.policy", "C:\\Users\\usuario\\Desktop\\CentralizedGroups\\src\\CentralizedGroups\\seguridad.txt");
+        System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralizedGroups/src/CentralizedGroups/seguridad.txt");
+        //System.setProperty("java.security.policy", "C:\\Users\\usuario\\Desktop\\CentralizedGroups\\src\\CentralizedGroups\\seguridad.txt");
         GroupServer server = new GroupServer();
        
         //Si no se ejecuta aquí da excepción
@@ -143,14 +143,15 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         this.mutex.lock();
         try{
             //Buscamos grupo y miembro en el grupo
-            int iGrupo, iMiembro;
+            int iGrupo, iMiembro = 0;
             iGrupo = gIndex(galias);
-            iMiembro = mIndex(oalias,galias);
+            //Comprobamos si existe el miembro de ese grupo y buscamos el miembro
+            if (iGrupo != -1) iMiembro = mIndex(oalias,galias);
             
             //Si existen el grupo y el miembro
-            if (iGrupo != -1 && iMiembro != -1){
+            if (iMiembro != -1){
                 //Devolvemos false si el oalias no es el del dueño del grupo
-                if( this.groupList.get(iGrupo).oalias != oalias )
+                if( !this.groupList.get(iGrupo).oalias.equals(oalias) )
                     return false;
                 else {
                     //Lo borramos y devolvemos true
@@ -232,11 +233,11 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             if(iGrupo == -1) return null;
             //Si el grupo existe buscamos el miembro
             iMiembro = mIndex(alias,galias);
-            boolean member = this.groupList.get(iGrupo).members.contains(this.groupList.get(gIndex(galias)).members.get(iMiembro));
+             if(iMiembro == -1) return null;
+             
             //Si es miembro se devuelve el GroupMember
-            if (member) return this.groupList.get(gIndex(galias)).members.get(iMiembro);
+            return this.groupList.get(iGrupo).members.get(iMiembro);
             //Si n se devuelve null
-            else return null;
         }
         finally{
             this.mutex.unlock();
@@ -344,7 +345,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         if(groupI == -1) return -1;
         
         //Buscar miembro si el grupo existe
-        for(GroupMember member : this.groupList.get(gIndex(galias)).members){
+        for(GroupMember member : this.groupList.get(groupI).members){
             if( member.alias.equals(alias)) return this.groupList.get(groupI).members.indexOf(member);
         }
         return -1;

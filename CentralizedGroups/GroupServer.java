@@ -298,9 +298,9 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             }
             else{
                 //Si el grupo existe, recorremos su lista de miembros
-                this.groupList.get(iGrupo).members.forEach((GM) -> {
-                    lista.add(GM.alias);
-                });
+                for(GroupMember gp : this.groupList.get(iGrupo).members) {
+                    lista.add(gp.alias);
+                }
             }
             return lista;
         }

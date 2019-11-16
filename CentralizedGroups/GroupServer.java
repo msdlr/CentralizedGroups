@@ -49,7 +49,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public static void main(String args[]) throws RemoteException {
         //Fichero de política
         //System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralisedGroups/src/CentralizedGroups/seguridad.txt");
-        System.setProperty("java.security.policy", "C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\CentralizedGroups\\seguridad.txt");
+        System.setProperty("java.security.policy", "C:\\Users\\usuario\\Desktop\\CentralizedGroups\\src\\CentralizedGroups\\seguridad.txt");
         GroupServer server = new GroupServer();
        
         //Si no se ejecuta aquí da excepción
@@ -264,11 +264,11 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
     
     @Override
-    public boolean AllowMembers(String gid) {
+    public boolean AllowMembers(String galias) {
         this.mutex.lock();
         try{
-            Integer gidInt = Integer.parseInt(gid);
-            int iGrupo = gIndex( gidInt );
+            //Buscamos el grupo con el alias especificado
+            int iGrupo = gIndex( galias );
             if(iGrupo == -1){
                 //Si el grupo no existe
                 return false;

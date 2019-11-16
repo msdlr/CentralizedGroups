@@ -51,7 +51,8 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         boolean menu = true;
         
         //Asignar fichero de seguridad
-        System.setProperty("java.security.policy", "C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
+        System.setProperty("java.security.policy", "C:\\Users\\usuario\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
+
         //System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralisedGroups/src/Cliente/seguridad.txt");
         
         //Objtener gestor de seguridad
@@ -87,7 +88,8 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         System.out.println("Conexión remota o local? (l/<dir. ip>)");
         command = scanner.nextLine();
         if (command.equals("l")) {
-            url = "//127.0.0.1/GroupServer";
+            host="localhost";
+            url = "//localhost/GroupServer";
         } else {
             host = command;
             url = "//" + host + "/GroupServer";
@@ -95,14 +97,14 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         /* inicializar registro */
         try {
             registro = LocateRegistry.getRegistry(host);
-            System.out.println("Registro obtenido correctamente");
+            System.out.println("Registro de " + host +" obtenido correctamente");
         } catch (RemoteException e) {
             System.out.println("ERROR inicializando registro");
         }
 
         /* creacion de proxy */
         try {
-            proxy = (GroupServerInterface) Naming.lookup("//127.0.0.1/GroupServer");
+            proxy = (GroupServerInterface) Naming.lookup(url);
         } catch (RemoteException ex) {
             System.out.println("No se ha podido contactar con el registro");
             exit(-1);
@@ -228,7 +230,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         System.out.println("Alias del grupo:");
         String galias = scanner.nextLine();
         try {
-            if (proxy.createGroup(galias, alias, hostname) < 1) {
+            if (proxy.createGroup(galias, alias, hostname) == -1) {
                 System.out.println("ERROR al crear el grupo");
                 return;
             }

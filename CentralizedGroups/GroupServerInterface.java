@@ -22,7 +22,7 @@ public interface GroupServerInterface extends Remote {
     boolean removeMember (String galias, String alias) throws RemoteException;
     GroupMember isMember (String galias, String alias) throws RemoteException;
     boolean StopMembers (String galias) throws RemoteException;
-    boolean AllowMembers (String gid) throws RemoteException;
+    boolean AllowMembers (String galias) throws RemoteException;
     LinkedList<String> ListMembers (String galias) throws RemoteException;
     LinkedList<String> ListGroup() throws RemoteException;
 }

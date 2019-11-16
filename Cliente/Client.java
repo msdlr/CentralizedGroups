@@ -51,7 +51,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         boolean menu = true;
         
         //Asignar fichero de seguridad
-        System.setProperty("java.security.policy", "C:\\Users\\usuario\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
+        System.setProperty("java.security.policy", "C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
 
         //System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralisedGroups/src/Cliente/seguridad.txt");
         
@@ -180,7 +180,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         //Necesitamos el gid del grupo y si es alta o baja
         //Buscar grupo
         System.out.println("Introduce el alias del grupo");
-        st = s.nextLine();
+        galias = s.nextLine();
         System.out.println("Buscando grupo" + st);
 
         try {
@@ -193,7 +193,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
             System.out.println("Grupo " + galias + " no encontrado");
         } else {
             //Si el grupo se ha encontrado
-            System.out.println("GRUPO:" + st + " con  GID" + gid);
+            System.out.println("GRUPO:" + galias + " con  GID" + gid);
 
             System.out.println("[B]loquear altas/bajas \n [D]esbloquear altas/bajas ");
 

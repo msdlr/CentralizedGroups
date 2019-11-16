@@ -202,7 +202,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                 case "D":
                 case "d":
                     try {
-                        proxy.AllowMembers(st);
+                        proxy.AllowMembers(galias);
                     } catch (RemoteException ex) {
                         System.out.println("allowOrDeny(): ERROR desbloqueando altas/bajas");
                     }
@@ -211,11 +211,11 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                 case "B":
                 case "b":
                     try {
-                        proxy.StopMembers(st);
+                        proxy.StopMembers(galias);
                     } catch (RemoteException ex) {
                         System.out.println("allowOrDeny(): ERROR bloqueando altas/bajas");
                     }
-                    System.out.println("Bloqueadas las altas/bajas en el grupo " + st);
+                    System.out.println("Bloqueadas las altas/bajas en el grupo " + galias);
                     break;
                 default:
                     System.out.println("ERROR");

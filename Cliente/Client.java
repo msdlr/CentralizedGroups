@@ -51,9 +51,9 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         boolean menu = true;
         
         //Asignar fichero de seguridad
-        System.setProperty("java.security.policy", "C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
+        //System.setProperty("java.security.policy", "C:\\Users\\Miguel\\Desktop\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
 
-        //System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralisedGroups/src/Cliente/seguridad.txt");
+        System.setProperty("java.security.policy", "/home/akselya/NetBeansProjects/JavaApplication1/src/Cliente/seguridad.txt");
         
         //Objtener gestor de seguridad
         if (System.getSecurityManager() == null) {
@@ -206,7 +206,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     } catch (RemoteException ex) {
                         System.out.println("allowOrDeny(): ERROR desbloqueando altas/bajas");
                     }
-                    System.out.println("Bloqueadas las altas/bajas en el grupo " + st);
+                    System.out.println("DesbCloqueadas las altas/bajas en el grupo " + st);
                     break;
                 case "B":
                 case "b":
@@ -252,6 +252,8 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
             }
         } catch (RemoteException ex) {
             System.out.println("deleteGroup(): ERROR de acceso remoto verificando propietario");
+        } catch (NullPointerException ex) {
+            System.out.println("deleteGroup(): ERROR, el grupo no existe");
         }
         try {
             if (!proxy.removeGroup(galias, alias)) {
@@ -287,7 +289,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                 option = scanner.nextLine();
                 if (option.equals("s")) {
                     if (proxy.addMember(galias, alias, hostname) == null) {
-                        System.out.println("ERROR al unirse a grupo");
+                        System.out.println("ERROR al unirse a grupo; las altas pueden estar bloqueadas");
                     } else {
                         System.out.println("Se ha unido al grupo con éxito");
                     }

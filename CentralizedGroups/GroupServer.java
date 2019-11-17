@@ -106,15 +106,12 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         this.mutex.lock();
         
         try{
-            int iGrupo = gIndex(galias);
-            if(iGrupo == -1){
-                //Si el grupo no exite se devuelve -1
-                return -1;
+            //Buscamos el grupo con ese galias
+            for(ObjectGroup OG : this.groupList){
+                if(OG.galias.equals(galias)) return OG.gid;
             }
-            else{
-                //Si existe se crea
-                return this.groupList.get(iGrupo).gid;
-            }
+            //Si el grupo no existe devuelve -1
+            return -1;
         }
         finally{
             this.mutex.unlock();
@@ -126,9 +123,8 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public String findGroup(int gid) {
         this.mutex.lock();
         try{
-            int iGrupo = GroupServer.this.gIndex(gid);
-            if (iGrupo != -1){
-                return this.groupList.get(iGrupo).galias;
+            for(ObjectGroup OG : this.groupList){
+                if (OG.gid == gid) return OG.galias;
             }
             return null;
         }
@@ -141,24 +137,22 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public boolean removeGroup(String galias, String oalias) {
         this.mutex.lock();
         try{
-            //Buscamos grupo y miembro en el grupo
-            int iGrupo, iMiembro = 0;
-            iGrupo = gIndex(galias);
-            //Comprobamos si existe el miembro de ese grupo y buscamos el miembro
-            if (iGrupo != -1) iMiembro = mIndex(oalias,galias);
-            
-            //Si existen el grupo y el miembro
-            if (iMiembro != -1){
-                //Devolvemos false si el oalias no es el del dueño del grupo
-                if( !this.groupList.get(iGrupo).oalias.equals(oalias) )
-                    return false;
-                else {
-                    //Lo borramos y devolvemos true
-                    this.groupList.get(iGrupo).members.remove(iMiembro);
-                    return true;
-                }
+            //Buscamos grupo
+            ObjectGroup grupo = null;
+            for( ObjectGroup OG : this.groupList ){
+                if(OG.galias.equals(galias)) grupo = OG;
             }
-            else return false;
+            //Si el grupo no existe devolvemos false
+            if(grupo == null) return false;
+            
+            //Si no es el dueño
+            if(!grupo.oalias.equals(oalias)) return false;
+            //Si es el dueño
+            else{
+                this.groupList.remove(grupo);
+                return true;
+            }
+            
         }
         finally{
             this.mutex.unlock();
@@ -170,47 +164,46 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         this.mutex.lock();
         
         try{
-            //Buscamos si el grupo existe
-            int iGrupo = gIndex(galias);
-            
-            //Si el grupo no está en la lista
-            if(iGrupo == -1) return null;
-            //Si el miembro con ese alias ya está en ese grupo
-            else if ( this.mIndex(alias, galias) != -1 ){
-                return null;
+            for( ObjectGroup OG : this.groupList ){
+                if(OG.galias.equals(galias)){
+                    //Comprobamos si el usuario está en el grupo
+                    if( isMember(galias, alias) != null) return null;
+                    
+                    //Si no está, lo añadimos
+                    return OG.addMember(alias);
+                }
             }
-            //Si el grupo existe y el miembro no está en él ya
-            return this.groupList.get(iGrupo).addMember(alias);
         }
         finally{
             this.mutex.lock();
         }
+        return null;
     }
 
     @Override
     public boolean removeMember(String galias, String alias) {
         this.mutex.lock();
         try{
-            //Buscamos el grupo y el usuario por alias
-            int iGrupo, iMiembro;
-            iGrupo = gIndex(galias);
-            
-            //Si el grupo no existe
-            if(iGrupo == -1){
-                return false;
+            //Buscamos grupo
+            ObjectGroup grupo = null;
+            for( ObjectGroup OG : this.groupList ){
+                if(OG.galias.equals(galias)) grupo = OG;
             }
+            //Si el grupo no existe devolvemos false
+            if(grupo == null) return false;
             
-            //Si existe pero se intenta borrar el dueño
-            else if (this.groupList.get(iGrupo).oalias.equals(alias)){
-                return false;
-            }
-            //Si se intenta borrar cualquier otro miembro
+            //Si es el dueño
+            if(grupo.oalias.equals(alias)) return false;
+            //Si no es el dueño
             else{
-                iMiembro = mIndex(alias,galias);
-                if(iMiembro == -1) return false; //Si el usuario no está en este grupo
-                boolean remove = this.groupList.get(iGrupo).members.remove( this.groupList.get(gIndex(galias)).members.get(iMiembro) );
-                return true;
+                for(GroupMember GM : grupo.members){
+                    if(GM.alias.equals(alias)){
+                        grupo.removeMember(alias);
+                        return true;
+                    }
+                }
             }
+            return false;
         }
         finally{
             this.mutex.unlock();
@@ -221,19 +214,12 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public GroupMember isMember(String galias, String alias) {
         this.mutex.lock();
         try{
-            //return this.groupList.get(getGroup galias).memberList.contains(this.memberList.get(alias));
-            int iGrupo, iMiembro;
-            iGrupo = gIndex(galias);
-
-            //Si el grupo no existe
-            if(iGrupo == -1) return null;
-            //Si el grupo existe buscamos el miembro
-            iMiembro = mIndex(alias,galias);
-             if(iMiembro == -1) return null;
-             
-            //Si es miembro se devuelve el GroupMember
-            return this.groupList.get(iGrupo).members.get(iMiembro);
-            //Si n se devuelve null
+            for( ObjectGroup OG : this.groupList ){
+                if(OG.galias.equals(galias)){
+                    return OG.isMember(alias);
+                }
+            }
+        return null;
         }
         finally{
             this.mutex.unlock();
@@ -244,16 +230,13 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public boolean StopMembers(String galias) {
         this.mutex.lock();
         try{
-            int iGrupo = gIndex(galias);
-            if(iGrupo == -1){
-                //Si el grupo no existe
-                return false;
+            for( ObjectGroup OG : this.groupList ){
+                if(OG.galias.equals(galias)) {
+                    OG.StopMembers();
+                    return true;
+                }
             }
-            else{
-                //Si el grupo existe
-                this.groupList.get(iGrupo).StopMembers();
-                return true;
-            }
+            return false;
         }
         finally{
             this.mutex.unlock();
@@ -264,17 +247,13 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public boolean AllowMembers(String galias) {
         this.mutex.lock();
         try{
-            //Buscamos el grupo con el alias especificado
-            int iGrupo = gIndex( galias );
-            if(iGrupo == -1){
-                //Si el grupo no existe
-                return false;
+            for( ObjectGroup OG : this.groupList ){
+                if(OG.galias.equals(galias)) {
+                    OG.AllowMembers();
+                    return true;
+                }
             }
-            else{
-                //Si el grupo existe
-                this.groupList.get(iGrupo).AllowMembers();
-                return true;
-            }
+        return false;
         }
         finally{
             this.mutex.unlock();
@@ -285,20 +264,17 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public LinkedList<String> ListMembers(String galias) {
         this.mutex.lock();
         try{
-            int iGrupo = gIndex(galias);
-            LinkedList lista = new LinkedList();
-
-            //Si el grupo no existe
-            if(findGroup(galias) == -1){
-                return null;
-            }
-            else{
-                //Si el grupo existe, recorremos su lista de miembros
-                for(GroupMember gp : this.groupList.get(iGrupo).members) {
-                    lista.add(gp.alias);
+            LinkedList<String> lnombres= new LinkedList();
+            for(ObjectGroup OG : this.groupList){
+                if(OG.galias.equals(galias)){
+                    //recorremos la lista de miembros
+                    for(GroupMember GM : OG.members){
+                        lnombres.add(GM.alias);
+                    }
+                    return lnombres;
                 }
             }
-            return lista;
+            return null;
         }
         finally{
             this.mutex.unlock();
@@ -314,43 +290,4 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         }
         return grupos;
     }
-    
-    /* FUNCIONES AUXILIARES */
-    
-    /*
-        Estas funciones buscan grupos y miembros tanto por id como por alias
-        Devuelven -1 si no se encuentra; si se encuentra devuelven el índice en las listas
-    */
-    private int gIndex(int gid){
-        for(ObjectGroup OG : this.groupList){
-            if(OG.gid == gid) return this.groupList.indexOf(OG);
-        }
-        return -1;
-    }
-    
-    private int gIndex(String galias){
-        for(ObjectGroup OG : this.groupList){
-            if(OG.galias.equals(galias)) return this.groupList.indexOf(OG);
-        }
-        return -1;
-    }
-    
-    private int mIndex(String alias, String galias){
-        int groupI = gIndex(galias);
-        //Si el grupo no existe
-        if(groupI == -1) return -1;
-        
-        //Buscar miembro si el grupo existe
-        for(GroupMember member : this.groupList.get(groupI).members){
-            if( member.alias.equals(alias)) return this.groupList.get(groupI).members.indexOf(member);
-        }
-        return -1;
-    }
-    
-//    private int getMember(int uid){
-//        for(GroupMember member : memberList){
-//            if(member.uid == uid) return this.memberList.indexOf(member);
-//        }
-//        return -1;
-//    }
 }

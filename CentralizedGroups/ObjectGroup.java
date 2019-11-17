@@ -28,15 +28,14 @@ public class ObjectGroup {
     ReentrantLock l = new ReentrantLock(true);
     Condition allowMod = l.newCondition();
 
-    public ObjectGroup(String galias, int gid, String oalias, int oid) {
+    public ObjectGroup(String galias, int gid, String oalias, String ohostname) {
         this.galias = galias;
         this.oalias = oalias;
         this.gid = gid;
-        this.oid = oid;
         this.members = new LinkedList();
         counter = 1;
         //addMember(oalias);
-        GroupMember member = new GroupMember(oalias, oalias, counter, gid);
+        GroupMember member = new GroupMember(oalias, ohostname, counter, gid);
         members.add(member);
         counter++;
     }

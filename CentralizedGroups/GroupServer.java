@@ -87,10 +87,9 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             
             //Generamos un nuevo identificador de grupo y de miembro
             this.groupCounter++;
-            this.memberCounter++;
             //Creamos el nuevo grupo y le ponemos al usuario invocador como miembro
             //El nuevo propietario del grupo es el cliente invocador que se pasa por alias
-            ObjectGroup nGroup = new ObjectGroup(galias,groupCounter, oalias, this.memberCounter);
+            ObjectGroup nGroup = new ObjectGroup(galias,groupCounter, oalias, ohostname);
             //No hace falta añadir un nuevo GroupMember al grupo porque ya lo hace el constructor de ObjectGroup
             this.groupList.add(nGroup);
         }
@@ -181,10 +180,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
                 return null;
             }
             //Si el grupo existe y el miembro no está en él ya
-            this.memberCounter++;
-            GroupMember nuevoMiembro = new GroupMember(alias, hostname,this.memberCounter,this.groupList.get(iGrupo).gid);
-            this.groupList.get(iGrupo).members.add(nuevoMiembro);
-            return nuevoMiembro;
+            return this.groupList.get(iGrupo).addMember(alias);
         }
         finally{
             this.mutex.lock();

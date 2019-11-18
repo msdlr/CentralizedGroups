@@ -95,7 +95,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         }
         finally{
             /* SALIDA DE SECCIÓN CRÍTICA */
-            mutex.unlock();
+            this.mutex.unlock();
         }
         return 0;
     }
@@ -149,7 +149,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             if(!grupo.oalias.equals(oalias)) return false;
             //Si es el dueño
             else{
-                this.groupList.remove(grupo);
+                this.groupList.remove(grupo); // surround with unlock/lock
                 return true;
             }
             
@@ -175,7 +175,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             }
         }
         finally{
-            this.mutex.lock();
+            this.mutex.unlock();  //was unlock
         }
         return null;
     }
@@ -206,7 +206,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             return false;
         }
         finally{
-            this.mutex.unlock();
+            this.mutex.unlock();  // was mutex.unlock()
         }
     }
 

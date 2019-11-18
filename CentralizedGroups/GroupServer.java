@@ -264,14 +264,11 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public LinkedList<String> ListMembers(String galias) {
         this.mutex.lock();
         try{
-            LinkedList<String> lnombres= new LinkedList();
             for(ObjectGroup OG : this.groupList){
                 if(OG.galias.equals(galias)){
                     //recorremos la lista de miembros
-                    for(GroupMember GM : OG.members){
-                        lnombres.add(GM.alias);
-                    }
-                    return lnombres;
+                    this.mutex.unlock();
+                    return OG.ListMembers();
                 }
             }
             return null;

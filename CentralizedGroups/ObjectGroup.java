@@ -41,13 +41,19 @@ public class ObjectGroup {
     }
 
     public GroupMember isMember(String alias) {
-        /* buscar miembro en la lista */
+        this.l.lock();
+        try{
+            /* buscar miembro en la lista */
         for (GroupMember member : members) {
             if (member.alias.equals(alias)) {
                 return member;
             }
         }
         return null;
+        }
+        finally {
+            this.l.unlock();
+        }
     }
 
     public GroupMember addMember(String alias) {
@@ -126,11 +132,18 @@ public class ObjectGroup {
     }
 
     public LinkedList<String> ListMembers() {
-        LinkedList<String> nombres = null;
+        this.l.lock();
+        try{
+        LinkedList<String> nombres = new LinkedList();
         for (GroupMember member : members) {
             nombres.add(member.alias);
         }
+        //this.l.unlock();
         return nombres;
+        }
+        finally{
+            this.l.unlock();
+        }
     }
 
 }

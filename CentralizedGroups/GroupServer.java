@@ -26,7 +26,6 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     Lock mutex;
     //Contador para generar identificadores de grupo y usuario
     private int groupCounter = 0;
-    private int memberCounter = 0;
     
     /* FUNCIONES */
     
@@ -36,7 +35,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         super();
         
         //Estableer gestor de seguridad
-        if (System.getSecurityManager() == null) {
+        if (System.getSecurityManager() == null){
                 System.setSecurityManager(new SecurityManager());  
         }
 
@@ -53,7 +52,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         GroupServer server = new GroupServer();
        
         //Si no se ejecuta aquí da excepción
-        if (System.getSecurityManager() == null) {
+        if (System.getSecurityManager() == null){
                 System.setSecurityManager(new SecurityManager());  
         }
         
@@ -63,7 +62,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             LocateRegistry.createRegistry(1099);
             Naming.rebind("GroupServer", server);
             System.out.println("Servidor lanzado correctamente");
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException e){
             //Si hay error al añadirlo al registro
             System.out.println("Error al hacer rebind");
         } catch (RemoteException ex){
@@ -74,13 +73,13 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     
     /* FUNCIONES DE LA INTERFAZ */
     @Override
-    public int createGroup(String galias, String oalias, String ohostname) {
+    public int createGroup(String galias, String oalias, String ohostname) throws RemoteException {
         /* ENTRADA EN SECCIÓN CRÍTICA */
         this.mutex.lock();
         
         try{
             // Buscar si el grupo solicitado ya existe y devolver error
-            if(findGroup(galias) != -1) {
+            if(findGroup(galias) != -1){
                 //Si el grupo ya existe se devuelve error
                 return -1;
             }
@@ -101,7 +100,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
 
     @Override
-    public int findGroup(String galias) {
+    public int findGroup(String galias) throws RemoteException {
         //BLoqueo para acceso concurrente
         this.mutex.lock();
         
@@ -120,7 +119,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
 
     @Override
-    public String findGroup(int gid) {
+    public String findGroup(int gid) throws RemoteException {
         this.mutex.lock();
         try{
             for(ObjectGroup OG : this.groupList){
@@ -134,7 +133,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
 
     @Override
-    public boolean removeGroup(String galias, String oalias) {
+    public boolean removeGroup(String galias, String oalias) throws RemoteException {
         this.mutex.lock();
         try{
             //Buscamos grupo
@@ -160,7 +159,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
 
     @Override
-    public GroupMember addMember(String galias, String alias, String hostname) {
+    public GroupMember addMember(String galias, String alias, String hostname) throws RemoteException {
         this.mutex.lock();
         
         try{
@@ -170,18 +169,21 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
                     if( isMember(galias, alias) != null) return null;
                     
                     //Si no está, lo añadimos
+                    this.mutex.unlock();
                     return OG.addMember(alias);
                 }
             }
         }
         finally{
+            try{
             this.mutex.unlock();  //was unlock
+            } catch (IllegalMonitorStateException e) {}
         }
         return null;
     }
 
     @Override
-    public boolean removeMember(String galias, String alias) {
+    public boolean removeMember(String galias, String alias) throws RemoteException {
         this.mutex.lock();
         try{
             //Buscamos grupo
@@ -198,20 +200,24 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             else{
                 for(GroupMember GM : grupo.members){
                     if(GM.alias.equals(alias)){
-                        grupo.removeMember(alias);
-                        return true;
+                        this.mutex.unlock();
+                        return grupo.removeMember(alias);
+                        
                     }
                 }
             }
             return false;
         }
+        
         finally{
-            this.mutex.unlock();  // was mutex.unlock()
+            try {
+                this.mutex.unlock();
+            } catch (IllegalMonitorStateException e) {}
         }
     }
 
     @Override
-    public GroupMember isMember(String galias, String alias) {
+    public GroupMember isMember(String galias, String alias) throws RemoteException {
         this.mutex.lock();
         try{
             for( ObjectGroup OG : this.groupList ){
@@ -227,11 +233,11 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
 
     @Override
-    public boolean StopMembers(String galias) {
+    public boolean StopMembers(String galias) throws RemoteException {
         this.mutex.lock();
         try{
             for( ObjectGroup OG : this.groupList ){
-                if(OG.galias.equals(galias)) {
+                if(OG.galias.equals(galias)){
                     OG.StopMembers();
                     return true;
                 }
@@ -244,11 +250,11 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
     
     @Override
-    public boolean AllowMembers(String galias) {
+    public boolean AllowMembers(String galias) throws RemoteException {
         this.mutex.lock();
         try{
             for( ObjectGroup OG : this.groupList ){
-                if(OG.galias.equals(galias)) {
+                if(OG.galias.equals(galias)){
                     OG.AllowMembers();
                     return true;
                 }
@@ -261,13 +267,13 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
 
     @Override
-    public LinkedList<String> ListMembers(String galias) {
+    public LinkedList<String> ListMembers(String galias) throws RemoteException {
         this.mutex.lock();
         try{
             for(ObjectGroup OG : this.groupList){
                 if(OG.galias.equals(galias)){
                     //recorremos la lista de miembros
-                    this.mutex.unlock();
+                    //this.mutex.unlock();
                     return OG.ListMembers();
                 }
             }
@@ -279,7 +285,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
 
     @Override
-    public LinkedList<String> ListGroup() {
+    public LinkedList<String> ListGroup() throws RemoteException {
         LinkedList grupos = new LinkedList<String>();
         
         for(ObjectGroup OG : this.groupList){

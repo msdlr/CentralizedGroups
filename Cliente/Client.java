@@ -36,7 +36,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
     public static void main(String[] args) throws UnknownHostException, IOException {
 
         //Asignar fichero de política de seguridad
-        System.setProperty("java.security.policy", "D:\\DOC\\NetBeansProjects\\CentralizedGroups\\src\\Cliente\\seguridad.txt");
+        System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralizedGroups/src/Cliente/seguridad.txt");
 
         //Crear gestor de seguridad si no hay ninguno
         if (System.getSecurityManager() == null) {
@@ -247,6 +247,8 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                                 System.out.println("ERROR");
                         }
                     }
+                    
+                    break;
 
                 case 5: //Mostrar miembros de un grupo en específico
                     String nombreGrupo = "";

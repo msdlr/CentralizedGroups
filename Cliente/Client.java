@@ -102,7 +102,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         while (true) {
             String opcion = "";
 
-            System.out.println("\n"+alias + "@" + localhost + 
+            System.out.println("\n"+alias + "@" + localhost + "\n"+
                     "1: crear grupo\n"
                     + "2: eliminar grupo\n"
                     + "3: entrar/salir de un grupo\n"

@@ -303,4 +303,16 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
     }
 
+    @Override
+    public void DepositMessage(GroupMessage m) throws RemoteException {
+        // TODO: implement this
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    @Override
+    public byte[] receiveGroupMessage(String galias) throws RemoteException {
+        // TODO: implement this
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }

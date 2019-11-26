@@ -5,6 +5,7 @@
  */
 package Cliente;
 
+import CentralizedGroups.GroupMessage;
 import CentralizedGroups.GroupServerInterface;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -17,7 +18,10 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  *
@@ -26,7 +30,12 @@ import java.util.Scanner;
 public class Client extends UnicastRemoteObject implements ClientInterface {
 
     /* Atributos para la clase */
-
+    private int port = 1099;
+    private Queue<GroupMessage> msgQueue;
+    private ReentrantLock mutex = new ReentrantLock(true);
+    private Condition waiting = mutex.newCondition();
+    
+    
  /* CONSTRUCTOR */
     Client() throws RemoteException {
         //Se exporta para que pueda atender peticiones de Callback (p4)
@@ -196,7 +205,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     break;
 
                 case 4: //Bloquear/desbloquear altas/bajas
-
+                    /*
                     //Variables
                     String B_D = "";
                     int gid = 0;
@@ -246,7 +255,8 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                             default:
                                 System.out.println("ERROR");
                         }
-                    }
+                    }  */
+                    
                     
                     break;
 

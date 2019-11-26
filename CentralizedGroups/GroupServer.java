@@ -233,7 +233,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         }
     }
 
-    @Override
+/*  @Override
     public boolean StopMembers(String galias) throws RemoteException {
         this.mutex.lock();
         try{
@@ -265,7 +265,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         finally{
             this.mutex.unlock();
         }
-    }
+    } */
 
     @Override
     public LinkedList<String> ListMembers(String galias) throws RemoteException {
@@ -293,5 +293,11 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             grupos.add(OG.galias);
         }
         return grupos;
+    }
+
+    @Override
+    public boolean sendGroupMessage(GroupMember gm, byte[] msg) throws RemoteException {
+        // TODO: implement this
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

@@ -21,8 +21,10 @@ public interface GroupServerInterface extends Remote {
     GroupMember addMember (String galias, String alias, String hostname) throws RemoteException;
     boolean removeMember (String galias, String alias) throws RemoteException;
     GroupMember isMember (String galias, String alias) throws RemoteException;
-    boolean StopMembers (String galias) throws RemoteException;
-    boolean AllowMembers (String galias) throws RemoteException;
+    //boolean StopMembers (String galias) throws RemoteException;
+    //boolean AllowMembers (String galias) throws RemoteException;
     LinkedList<String> ListMembers (String galias) throws RemoteException;
     LinkedList<String> ListGroup() throws RemoteException;
+    
+    boolean sendGroupMessage(GroupMember gm, byte[] msg) throws RemoteException;
 }

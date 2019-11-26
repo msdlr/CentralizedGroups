@@ -112,7 +112,7 @@ public class ObjectGroup {
         }
     }
 
-    public void StopMembers() {
+/*  public void StopMembers() {
         l.lock();
         try {
             locked = true;
@@ -125,11 +125,11 @@ public class ObjectGroup {
         l.lock();
         try {
             locked = false;
-            allowMod.signalAll();    /* desbloquear clientes bloqueados */
+            allowMod.signalAll();    // desbloquear clientes bloqueados
         } finally {
             l.unlock();
         }
-    }
+    }  */
 
     public LinkedList<String> ListMembers() {
         this.l.lock();

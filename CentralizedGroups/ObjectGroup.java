@@ -19,7 +19,7 @@ public class ObjectGroup {
     String oalias;
     int gid;    /* group id */
     int oid;    /* owner id */
-    private int counter;
+    private int counter;    /* == n. de miembros */
     LinkedList<GroupMember> members;
 
     /* estructuras para bloqueo */
@@ -34,9 +34,9 @@ public class ObjectGroup {
         this.oalias = oalias;
         this.gid = gid;
         this.members = new LinkedList();
-        counter = 1;
+        counter = 0;
         //addMember(oalias);
-        GroupMember member = new GroupMember(oalias, ohostname, counter, gid, port);
+        GroupMember member = new GroupMember(oalias, ohostname, counter+1, gid, port);
         members.add(member);
         counter++;
     }
@@ -145,6 +145,19 @@ public class ObjectGroup {
         finally{
             this.l.unlock();
         }
+    }
+    
+    void Sending() {
+        // TODO: implement this
+    }
+    
+    void EndSending() {
+        // TODO: implement this
+    }
+    
+    boolean sendGroupMessage(GroupMember gm, byte msg[]) {
+        // TODO: implement this
+        return false;
     }
 
 }

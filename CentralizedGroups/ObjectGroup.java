@@ -20,6 +20,7 @@ public class ObjectGroup {
     int gid;    /* group id */
     int oid;    /* owner id */
     private int counter;    /* == n. de miembros */
+    int pendingMsgs;        /* n. de envios pendientes */
     LinkedList<GroupMember> members;
 
     /* estructuras para bloqueo */
@@ -35,6 +36,7 @@ public class ObjectGroup {
         this.gid = gid;
         this.members = new LinkedList();
         counter = 0;
+        pendingMsgs = 0;
         //addMember(oalias);
         GroupMember member = new GroupMember(oalias, ohostname, counter+1, gid, port);
         members.add(member);
@@ -133,7 +135,7 @@ public class ObjectGroup {
     }  */
 
     public LinkedList<String> ListMembers() {
-        this.l.lock();
+        l.lock();
         try{
         LinkedList<String> nombres = new LinkedList();
         for (GroupMember member : members) {
@@ -143,20 +145,47 @@ public class ObjectGroup {
         return nombres;
         }
         finally{
-            this.l.unlock();
+            l.unlock();
         }
     }
     
     void Sending() {
-        // TODO: implement this
+        l.lock();
+        try {
+            pendingMsgs++;
+            if (pendingMsgs > 0) {
+                locked = true;
+            }
+        } finally {
+            l.unlock();
+        }
     }
     
     void EndSending() {
-        // TODO: implement this
+        l.lock();
+        try {
+            pendingMsgs--;
+            if (pendingMsgs == 0) {
+                locked = false;
+                allowMod.signalAll();
+            }
+        } finally {
+            l.unlock();
+        }
     }
     
     boolean sendGroupMessage(GroupMember gm, byte msg[]) {
         // TODO: implement this
+        l.lock();
+        try {
+            Sending();
+            
+            // TODO: run SendingMessage thread
+            
+            EndSending();
+        } finally {
+            l.unlock();
+        }
         return false;
     }
 

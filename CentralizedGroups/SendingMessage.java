@@ -19,14 +19,13 @@ import java.util.logging.Logger;
  * @author Miguel
  */
 public class SendingMessage extends Thread{
+    //Para identificar grupo, miembro de destino y mensaje
+    ObjectGroup grp;
     GroupMessage msg;
     GroupMember dst;
-    ObjectGroup grp;  
-    //Registro
+    //Registro y proxy para RMI
     Registry reg;
-    //Objeto client
-    ClientInterface client;
-    
+    ClientInterface proxy;
     
     public SendingMessage(ObjectGroup grp, GroupMessage msg, GroupMember dst){
         this.msg = msg;
@@ -40,17 +39,17 @@ public class SendingMessage extends Thread{
         try {
             //Obtiene el objeto sobre el que invocar el metodo
             reg = LocateRegistry.getRegistry(dst.hostname, dst.port);
-            client = (ClientInterface) reg.lookup(dst.alias); //lookup se usa para tratar como string relativo
+            proxy = (ClientInterface) reg.lookup(dst.alias); //lookup se usa para tratar como string relativo
             
             Random r = new Random();
-            //Genera el tiempo de espera
+            //Se genera un tiempo de espera aleatorio entre 10 y 30 (milisegundos!)
             int espera = 10 + r.nextInt(11);
             Thread.sleep(espera * 1000);
-            //Deposita el msg y notifica al grp
-            client.DepositMessage(msg);
+            //Deposita el mensaje, notifica al grupo
+            proxy.DepositMessage(msg);
             grp.EndSending();
             
-        //Tratamiento de exceptiones del método
+        //Excepciones
         } catch (InterruptedException ex) {
             Logger.getLogger(SendingMessage.class.getName()).log(Level.SEVERE, null, ex);
         } catch (RemoteException ex) {

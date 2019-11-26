@@ -28,14 +28,15 @@ public class ObjectGroup {
     ReentrantLock l = new ReentrantLock(true);
     Condition allowMod = l.newCondition();
 
-    public ObjectGroup(String galias, int gid, String oalias, String ohostname) {
+    //Constructor actualizado para p4
+    public ObjectGroup(String galias, int gid, String oalias, String ohostname, int port) {
         this.galias = galias;
         this.oalias = oalias;
         this.gid = gid;
         this.members = new LinkedList();
         counter = 1;
         //addMember(oalias);
-        GroupMember member = new GroupMember(oalias, ohostname, counter, gid);
+        GroupMember member = new GroupMember(oalias, ohostname, counter, gid, port);
         members.add(member);
         counter++;
     }
@@ -56,7 +57,7 @@ public class ObjectGroup {
         }
     }
 
-    public GroupMember addMember(String alias) {
+    public GroupMember addMember(String alias, int port) {
         /* TODO: control de bloqueo */
         l.lock();
         try {
@@ -76,7 +77,7 @@ public class ObjectGroup {
                 return null;
             }
             /* si no, añadir miembro nuevo */
-            members.add(new GroupMember(alias, oalias, counter, gid));
+            members.add(new GroupMember(alias, oalias, counter, gid, port));
             /* una vez añadido, incrementar contador y devolver miembro */
             counter++;
             return isMember(alias);    /* si la adición ha fallado, devuelve null */

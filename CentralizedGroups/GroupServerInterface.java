@@ -14,11 +14,11 @@ import java.util.LinkedList;
  * @author Miguel
  */
 public interface GroupServerInterface extends Remote {
-    int createGroup (String galias, String oalias, String ohostname) throws RemoteException;
+    int createGroup (String galias, String oalias, String ohostname, int port) throws RemoteException;
     int findGroup (String galias) throws RemoteException;
     String findGroup (int gid) throws RemoteException;
     boolean removeGroup (String galias, String oalias) throws RemoteException;
-    GroupMember addMember (String galias, String alias, String hostname) throws RemoteException;
+    GroupMember addMember (String galias, String alias, String hostname, int port) throws RemoteException;
     boolean removeMember (String galias, String alias) throws RemoteException;
     GroupMember isMember (String galias, String alias) throws RemoteException;
     //boolean StopMembers (String galias) throws RemoteException;

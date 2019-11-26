@@ -17,6 +17,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Scanner;
@@ -28,18 +29,22 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Miguel
  */
 public class Client extends UnicastRemoteObject implements ClientInterface {
-
     /* Atributos para la clase */
-    private int port = 1099;
+    private static int cPort;
     private Queue<GroupMessage> msgQueue;
     private ReentrantLock mutex = new ReentrantLock(true);
     private Condition waiting = mutex.newCondition();
     
     
  /* CONSTRUCTOR */
-    Client() throws RemoteException {
+    Client(int p) throws RemoteException {
         //Se exporta para que pueda atender peticiones de Callback (p4)
         super();
+        
+        //Inicialización de los campos
+        cPort = p;
+        mutex = new ReentrantLock(true);
+        waiting = mutex.newCondition();
     }
 
     public static void main(String[] args) throws UnknownHostException, IOException {
@@ -62,8 +67,21 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         }
 
         //Creamos el objeto de tipo Cliente
+        
+        //Preguntar puerto
+        Scanner s = new Scanner(System.in);
+        System.out.println("Introduce puerto del servidor local");
+        String puerto = s.nextLine();
+        
+        try{
+            cPort = Integer.parseInt(puerto);
+        } catch(NumberFormatException e){
+            System.out.println("Puerto no válido, saliendo");
+            System.exit(-1);
+        }
+        
         Client c;
-        c = new Client();
+        c = new Client(cPort);
 
         //Objeto del tipo de la interfaz -> proxy
         GroupServerInterface proxy = null;
@@ -71,7 +89,6 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         //Conexión local / remota
         System.out.println("Local/IP");
 
-        Scanner s = new Scanner(System.in);
         String ip = s.nextLine();
         String url = null;
 
@@ -130,7 +147,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     System.out.println("Alias del grupo:");
                     String nuevoGalias = s.nextLine();
                     try {
-                        if (proxy.createGroup(nuevoGalias, alias, localhost) == -1) {
+                        if (proxy.createGroup(nuevoGalias, alias, localhost, cPort) == -1) {
                             System.out.println("ERROR al crear el grupo");
                             return;
                         }
@@ -189,7 +206,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                             System.out.println("Unirte al grupo " + galiasEntrarSalir + "? (s/n)");
                             entrarSalir = s.nextLine();
                             if (entrarSalir.equals("s")) {
-                                if (proxy.addMember(galiasEntrarSalir, alias, localhost) == null) {
+                                if (proxy.addMember(galiasEntrarSalir, alias, localhost,cPort) == null) {
                                     System.out.println("ERROR al unirse a grupo; las altas pueden estar bloqueadas");
                                 } else {
                                     System.out.println("Se ha unido al grupo con éxito");

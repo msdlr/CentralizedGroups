@@ -297,7 +297,17 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
 
     @Override
     public boolean sendGroupMessage(GroupMember gm, byte[] msg) throws RemoteException {
-        // TODO: implement this
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.mutex.lock();
+        /* Entrada en sección crítica */
+        
+        //Buscamos el miembro que se busca
+        for (ObjectGroup OG : this.groupList){
+            for(GroupMember member : OG.members)
+                //Si en este grupo encontramos el cliente que buscamos, enviamos
+                if( member.equals(gm) ){
+                    OG.sendGroupMessage(gm, msg);
+                }
+        }
+        return false;
     }
 }

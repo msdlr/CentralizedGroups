@@ -74,7 +74,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     
     /* FUNCIONES DE LA INTERFAZ */
     @Override
-    public int createGroup(String galias, String oalias, String ohostname) throws RemoteException {
+    public int createGroup(String galias, String oalias, String ohostname, int port) throws RemoteException {
         /* ENTRADA EN SECCIÓN CRÍTICA */
         this.mutex.lock();
         
@@ -89,7 +89,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             this.groupCounter++;
             //Creamos el nuevo grupo y le ponemos al usuario invocador como miembro
             //El nuevo propietario del grupo es el cliente invocador que se pasa por alias
-            ObjectGroup nGroup = new ObjectGroup(galias,groupCounter, oalias, ohostname);
+            ObjectGroup nGroup = new ObjectGroup(galias,groupCounter, oalias, ohostname, port);
             //No hace falta añadir un nuevo GroupMember al grupo porque ya lo hace el constructor de ObjectGroup
             this.groupList.add(nGroup);
         }
@@ -160,7 +160,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
 
     @Override
-    public GroupMember addMember(String galias, String alias, String hostname) throws RemoteException {
+    public GroupMember addMember(String galias, String alias, String hostname, int port) throws RemoteException {
         this.mutex.lock();
         
         try{
@@ -171,7 +171,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
                     
                     //Si no está, lo añadimos
                     this.mutex.unlock();
-                    return OG.addMember(alias);
+                    return OG.addMember(alias,port);
                 }
             }
         }

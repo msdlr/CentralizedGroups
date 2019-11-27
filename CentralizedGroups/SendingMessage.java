@@ -33,13 +33,12 @@ public class SendingMessage extends Thread{
         this.grp = grp;
     }
     
-    
     @Override
     public void run(){        
         try {
-            //Obtiene el objeto sobre el que invocar el metodo
+            //Conseguimos el registro y el proxy
             reg = LocateRegistry.getRegistry(dst.hostname, dst.port);
-            proxy = (ClientInterface) reg.lookup(dst.alias); //lookup se usa para tratar como string relativo
+            proxy = (ClientInterface) reg.lookup(dst.alias);
             
             Random r = new Random();
             //Se genera un tiempo de espera aleatorio entre 10 y 30 (milisegundos!)

@@ -302,12 +302,12 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         
         //Buscamos el miembro que se busca
         for (ObjectGroup OG : this.groupList){
-            for(GroupMember member : OG.members)
                 //Si en este grupo encontramos el cliente que buscamos, enviamos
-                if( member.equals(gm) ){
+                if( OG.gid == gm.gid ){
                     OG.sendGroupMessage(gm, msg);
                 }
         }
+        this.mutex.unlock();
         return false;
     }
 }

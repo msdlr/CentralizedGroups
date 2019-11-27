@@ -13,10 +13,10 @@ import java.io.Serializable;
  * @author Silvia
  */
 public class GroupMember implements Serializable{
-    String alias;
-    String hostname;
-    int uid;    /* user id  */
-    int gid;    /* group id */
+    public String alias;
+    public String hostname;
+    public int uid;    /* user id  */
+    public int gid;    /* group id */
     
     //Añadido en p4, puerto de la petición
     int port;

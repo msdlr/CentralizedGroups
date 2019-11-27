@@ -32,8 +32,13 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Client extends UnicastRemoteObject implements ClientInterface {
 
     /* Atributos para la clase */
-    private static int cPort;
+    private static Client c;
+    
+    private int cPort;
+    private String alias;
     private Queue<GroupMessage> msgQueue;
+    private GroupServerInterface proxy;
+    
     private ReentrantLock mutex = new ReentrantLock(true);
     private Condition waiting = mutex.newCondition();
 
@@ -52,7 +57,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
     public static void main(String[] args) throws UnknownHostException, IOException {
 
         //Asignar fichero de política de seguridad
-        System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralizedGroups/src/Cliente/seguridad.txt");
+        System.setProperty("java.security.policy", "src/Cliente/seguridad.txt");
 
         //Crear gestor de seguridad si no hay ninguno
         if (System.getSecurityManager() == null) {
@@ -74,18 +79,17 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         System.out.println("Introduce puerto del servidor local");
         String puerto = s.nextLine();
 
+        int nPuerto = 1099;
         try {
-            cPort = Integer.parseInt(puerto);
+            nPuerto = Integer.parseInt(puerto);
         } catch (NumberFormatException e) {
             System.out.println("Puerto no válido, saliendo");
             System.exit(-1);
         }
-
-        Client c;
-        c = new Client(cPort);
+        c = new Client(nPuerto);
 
         //Objeto del tipo de la interfaz -> proxy
-        GroupServerInterface proxy = null;
+        c.proxy = null;
 
         //Conexión local / remota
         System.out.println("Local/IP");
@@ -102,7 +106,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         System.out.println("Buscando servidor: " + url);
 
         try {
-            proxy = (GroupServerInterface) Naming.lookup(url);
+            c.proxy = (GroupServerInterface) Naming.lookup(url);
             System.out.println("PROXY OBTENIDO CORRECTAMENTE");
         } catch (NotBoundException ex) {
             //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
@@ -123,13 +127,13 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         }
 
         System.out.println("Introduce tu alias!");
-        String alias = s.nextLine();
+        c.alias = s.nextLine();
         String localhost = InetAddress.getLocalHost().getHostName();
 
         while (true) {
             String opcion = "";
 
-            System.out.println("\n" + alias + "@" + localhost + "\n"
+            System.out.println("\n" + c.alias + "@" + localhost + "\n"
                     + "1: crear grupo\n"
                     + "2: eliminar grupo\n"
                     + "3: entrar/salir de un grupo\n"
@@ -149,7 +153,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     System.out.println("Alias del grupo:");
                     String nuevoGalias = s.nextLine();
                     try {
-                        if (proxy.createGroup(nuevoGalias, alias, localhost, cPort) == -1) {
+                        if (c.proxy.createGroup(nuevoGalias, c.alias, localhost, c.cPort) == -1) {
                             System.out.println("ERROR al crear el grupo");
                             return;
                         }
@@ -165,7 +169,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     System.out.println("Alias del grupo:");
                     galias = s.nextLine();
                     try {
-                        if (!proxy.ListMembers(galias).getFirst().equals(alias)) {
+                        if (!c.proxy.ListMembers(galias).getFirst().equals(c.alias)) {
                             System.out.println("ERROR verificando que se es propietario");
                             return;
                         }
@@ -175,7 +179,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                         System.out.println("deleteGroup(): ERROR, el grupo no existe");
                     }
                     try {
-                        if (!proxy.removeGroup(galias, alias)) {
+                        if (!c.proxy.removeGroup(galias, c.alias)) {
                             System.out.println("ERROR al borrar grupo");
                         } else {
                             System.out.println("Grupo " + galias + " eliminado");
@@ -192,11 +196,11 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     System.out.println("Alias del grupo:");
                     galiasEntrarSalir = s.nextLine();
                     try {
-                        if (proxy.isMember(galiasEntrarSalir, alias) != null) {
+                        if (c.proxy.isMember(galiasEntrarSalir, c.alias) != null) {
                             System.out.println("Ya estás en el grupo " + galiasEntrarSalir + ", salir de él? (s/n)");
                             entrarSalir = s.nextLine();
                             if (entrarSalir.equals("s")) {
-                                if (!proxy.removeMember(galiasEntrarSalir, alias)) {
+                                if (!c.proxy.removeMember(galiasEntrarSalir, c.alias)) {
                                     System.out.println("ERROR al salir de grupo");
                                 } else {
                                     System.out.println("Se ha salido del grupo con éxito");
@@ -208,7 +212,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                             System.out.println("Unirte al grupo " + galiasEntrarSalir + "? (s/n)");
                             entrarSalir = s.nextLine();
                             if (entrarSalir.equals("s")) {
-                                if (proxy.addMember(galiasEntrarSalir, alias, localhost, cPort) == null) {
+                                if (c.proxy.addMember(galiasEntrarSalir, c.alias, localhost, c.cPort) == null) {
                                     System.out.println("ERROR al unirse a grupo; las altas pueden estar bloqueadas");
                                 } else {
                                     System.out.println("Se ha unido al grupo con éxito");
@@ -231,18 +235,18 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
                     //Comprobar si existe el grupo
                     try {
-                        if (proxy.findGroup(gEnviar) == -1) {
+                        if (c.proxy.findGroup(gEnviar) == -1) {
                             //Si el grupo no se encuentra
                             System.out.println("Grupo " + gEnviar + " no encontrado");
                         } else {
                             //Si el grupo existe, comprobamos si se es miembro
-                            GroupMember m = proxy.isMember(gEnviar, alias);
+                            GroupMember m = c.proxy.isMember(gEnviar, c.alias);
                             if (m == null) {
                                 System.out.println("No eres miembro del grupo " + gEnviar);
                             } else {
                                 String msg = s.nextLine();
 
-                                boolean ok = proxy.sendGroupMessage(m, msg.getBytes());
+                                boolean ok = c.proxy.sendGroupMessage(m, msg.getBytes());
                                 if (ok) {
                                     System.out.println("Mensaje enviado con éxito");
                                 } else {
@@ -269,7 +273,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     nombreGrupo = s.nextLine();
                     System.out.println("Buscando el grupo con alias \"" + nombreGrupo + "\"");
                     try {
-                        namesList = proxy.ListMembers(nombreGrupo);
+                        namesList = c.proxy.ListMembers(nombreGrupo);
                         if (namesList == null) {
                             System.out.println("El grupo " + nombreGrupo + " no existe");
                         } else {
@@ -283,7 +287,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                 case 7: //Mostrar grupos actuales
                     LinkedList<String> l = new LinkedList();
                     try {
-                        l = proxy.ListGroup();
+                        l = c.proxy.ListGroup();
                         if (l.isEmpty()) {
                             System.out.println("No hay grupos en este servidor");
                         } else {
@@ -306,14 +310,48 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
     @Override
     public void DepositMessage(GroupMessage m) throws RemoteException {
-        // TODO: implement this
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        mutex.lock();
+        try {
+            /* añadir message a cola y despertar procesos bloqueados */
+            msgQueue.add(m);
+            waiting.signalAll();
+        } finally {
+            mutex.unlock();
+        }
     }
 
     @Override
     public byte[] receiveGroupMessage(String galias) throws RemoteException {
         // TODO: implement this
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        GroupMessage msg = null;
+        mutex.lock();
+        try {
+            /* verificar usuario y grupo */
+            if (c.proxy.isMember(galias, c.alias) == null) {
+                return null;
+            }
+            /* mientras no haya mensaje que devolver */
+            while (msg == null) {
+                /* buscar mensajes para grupo galias en la cola */
+                for (GroupMessage m : msgQueue) {
+                    // si no funciona, comprobar que msg == null
+                    if (m.emisor.gid == proxy.findGroup(galias)) {
+                        msg = m;
+                        msgQueue.remove(m);
+                    }
+                }
+                if (msg == null) {
+                    try {
+                        waiting.await();
+                    } catch (InterruptedException ex) {
+                        System.out.println("ERROR de concurrencia esperando mensaje");
+                    }
+                }
+            }
+        } finally {
+            mutex.unlock();
+        }
+        return msg.mensaje;
     }
 
 }

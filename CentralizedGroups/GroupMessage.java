@@ -12,8 +12,8 @@ import java.io.Serializable;
  * @author Silvia
  */
 public class GroupMessage implements Serializable {
-    byte[] mensaje;
-    GroupMember emisor;
+    public byte[] mensaje;
+    public GroupMember emisor;
     
     public GroupMessage(byte[] mensaje, GroupMember emisor) {
         this.mensaje = mensaje;

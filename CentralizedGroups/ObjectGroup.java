@@ -182,7 +182,7 @@ public class ObjectGroup {
             
             // TODO: run SendingMessage thread
             for (GroupMember target : members) {
-                if ( target.uid == gm.uid) {
+                if ( target.uid != gm.uid) {
                     SendingMessage m = new SendingMessage(this, new GroupMessage(msg, gm), target);
                     m.start();
                 }

@@ -262,7 +262,10 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
                 case 5:
                     /* Recoger mensaje */
-
+                    String gRecv = "";
+                    System.out.println("Introduce el alias del grupo");
+                    gRecv = s.nextLine();
+                    c.receiveGroupMessage(gRecv);
                     break;
 
                 case 6: //Mostrar miembros de un grupo en específico

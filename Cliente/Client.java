@@ -63,16 +63,6 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new SecurityManager());
         }
-
-        //Lanzar el registro en el puerto 1099
-        try {
-            Registry registro = LocateRegistry.getRegistry(1099);
-            System.out.println("Registro (local) lanzado correctamente");
-        } catch (RemoteException e) {
-            System.out.println("Error lanzando el registro");
-            System.exit(-1);
-        }
-
         //Creamos el objeto de tipo Cliente
         //Preguntar puerto
         Scanner s = new Scanner(System.in);
@@ -83,10 +73,27 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         try {
             nPuerto = Integer.parseInt(puerto);
         } catch (NumberFormatException e) {
-            System.out.println("Puerto no válido, saliendo");
+            System.out.println("Puerto no válido, asignando 1099");
+        }
+        
+        //Creación del objeto cliente
+        try{
+            c = new Client(nPuerto);
+        } catch (RemoteException e){
+            System.out.println("Error remoto creando el servidor");
+        } catch(Exception e) {
+            System.out.println("Error desconocido");
+        }
+        
+        //Lanzar el registro en el puerto 1099
+        try {
+            Registry registro = LocateRegistry.getRegistry(c.cPort);
+            System.out.println("Registro (local) lanzado correctamente");
+        } catch (RemoteException e) {
+            System.out.println("Error lanzando el registro");
             System.exit(-1);
         }
-        c = new Client(nPuerto);
+
 
         //Objeto del tipo de la interfaz -> proxy
         c.proxy = null;

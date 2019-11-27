@@ -181,12 +181,19 @@ public class ObjectGroup {
             Sending();
             
             // TODO: run SendingMessage thread
+            for (GroupMember target : members) {
+                if (!target.equals(gm)) {
+                    SendingMessage m = new SendingMessage(this, new GroupMessage(msg, gm), target);
+                    m.start();
+                }
+            }
             
             EndSending();
+            return true;
         } finally {
             l.unlock();
         }
-        return false;
+        //return false;
     }
 
 }

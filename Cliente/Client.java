@@ -153,8 +153,8 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
             //Leer opción
             opcion = s.nextLine();
 
-            switch (Integer.parseInt(opcion)) {
-                case 1: //Crear un grupo nuevo
+            switch (opcion) {
+                case "1": //Crear un grupo nuevo
                     // supone que alias y hostname se obtienen al principio del main
                     System.out.println("Creando grupo...");
                     System.out.println("Alias del grupo:");
@@ -170,7 +170,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     System.out.println("Grupo " + nuevoGalias + " creado");
                     break;
 
-                case 2: //Borrar grupo
+                case "2": //Borrar grupo
                     System.out.println("eliminando grupo...");
                     String galias;
                     System.out.println("Alias del grupo:");
@@ -197,7 +197,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
                     break;
 
-                case 3: //Unirse / salir de un grupo
+                case "3": //Unirse / salir de un grupo
                     String entrarSalir,
                      galiasEntrarSalir;
                     System.out.println("Alias del grupo:");
@@ -234,7 +234,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
                     break;
 
-                case 4:
+                case "4":
                     /* Enviar mensaje*/
                     //Necesitamos saber el nombre del grupo
                     System.out.println("Escribe el nombre del grupo");
@@ -267,7 +267,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
                     break;
 
-                case 5:
+                case "5":
                     /* Recoger mensaje */
                     String gRecv = "";
                     System.out.println("Introduce el alias del grupo");
@@ -275,7 +275,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     c.receiveGroupMessage(gRecv);
                     break;
 
-                case 6: //Mostrar miembros de un grupo en específico
+                case "6": //Mostrar miembros de un grupo en específico
                     String nombreGrupo = "";
                     LinkedList<String> namesList;
 
@@ -294,7 +294,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     }
                     break;
 
-                case 7: //Mostrar grupos actuales
+                case "7": //Mostrar grupos actuales
                     LinkedList<String> l = new LinkedList();
                     try {
                         l = c.proxy.ListGroup();
@@ -308,7 +308,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     }
                     break;
 
-                case 8: //Salir
+                case "8": //Salir
                     System.exit(0);
 
                 default: //Intro / opción no válida 

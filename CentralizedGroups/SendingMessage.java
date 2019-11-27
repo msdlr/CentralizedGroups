@@ -41,8 +41,8 @@ public class SendingMessage extends Thread{
             proxy = (ClientInterface) reg.lookup(dst.alias);
             
             Random r = new Random();
-            //Se genera un tiempo de espera aleatorio entre 10 y 30 (milisegundos!)
-            int espera = 10 + r.nextInt(11);
+            //Se genera un tiempo de espera aleatorio entre 30 y 60 (milisegundos!)
+            int espera = 30 + r.nextInt(31);
             Thread.sleep(espera * 1000);
             //Deposita el mensaje, notifica al grupo
             proxy.DepositMessage(msg);

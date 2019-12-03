@@ -336,7 +336,6 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
     @Override
     public byte[] receiveGroupMessage(String galias) throws RemoteException {
-        // TODO: implement this
         GroupMessage msg = null;
         mutex.lock();
         try {

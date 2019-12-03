@@ -60,7 +60,6 @@ public class ObjectGroup {
     }
 
     public GroupMember addMember(String alias, int port) {
-        /* TODO: control de bloqueo */
         l.lock();
         try {
     //        /* si las altas y bajas estan bloqueadas, esperar a que se
@@ -93,7 +92,6 @@ public class ObjectGroup {
     }
 
     public boolean removeMember(String alias) {
-        /* TODO: control de bloqueo */
         l.lock();
         try {
             /* si las altas y bajas estan bloqueadas, esperar a que se 
@@ -175,12 +173,10 @@ public class ObjectGroup {
     }
     
     boolean sendGroupMessage(GroupMember gm, byte msg[]) {
-        // TODO: implement this
         l.lock();
         try {
             Sending();
             
-            // TODO: run SendingMessage thread
             for (GroupMember target : members) {
                 if ( target.uid != gm.uid) {
                     SendingMessage m = new SendingMessage(this, new GroupMessage(msg, gm), target);

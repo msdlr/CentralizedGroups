@@ -78,7 +78,7 @@ public class ObjectGroup {
                 return null;
             }
             /* si no, añadir miembro nuevo */
-            members.add(new GroupMember(alias, hostname, counter, gid, port));
+            members.add(new GroupMember(alias, hostname, counter+1, gid, port));
             /* una vez añadido, incrementar contador y devolver miembro */
             counter++;
             return isMember(alias);    /* si la adición ha fallado, devuelve null */

@@ -170,7 +170,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
                     
                     //Si no está, lo añadimos
                     this.mutex.unlock();
-                    return OG.addMember(alias,port);
+                    return OG.addMember(alias,hostname,port);
                 }
             }
         }

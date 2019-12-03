@@ -59,7 +59,7 @@ public class ObjectGroup {
         }
     }
 
-    public GroupMember addMember(String alias, int port) {
+    public GroupMember addMember(String alias, String hostname, int port) {
         l.lock();
         try {
     //        /* si las altas y bajas estan bloqueadas, esperar a que se
@@ -78,7 +78,7 @@ public class ObjectGroup {
                 return null;
             }
             /* si no, añadir miembro nuevo */
-            members.add(new GroupMember(alias, oalias, counter, gid, port));
+            members.add(new GroupMember(alias, hostname, counter, gid, port));
             /* una vez añadido, incrementar contador y devolver miembro */
             counter++;
             return isMember(alias);    /* si la adición ha fallado, devuelve null */

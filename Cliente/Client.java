@@ -66,7 +66,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         //Creamos el objeto de tipo Cliente
         //Preguntar puerto
         Scanner s = new Scanner(System.in);
-        System.out.println("Introduce puerto del servidor local");
+        System.out.println("Introduce puerto del registro local");
         String puerto = s.nextLine();
 
         int nPuerto = 1099;
@@ -75,6 +75,10 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         } catch (NumberFormatException e) {
             System.out.println("Puerto no válido, asignando 1099");
         }
+        
+        //Conseguir hostname local
+        String localhost = InetAddress.getLocalHost().getHostName();
+
         
         //Creación del objeto cliente
         try{
@@ -87,11 +91,12 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         
         //Lanzar el registro en el puerto 1099
         try {
-            Registry registro = LocateRegistry.getRegistry(c.cPort);
+            Registry registro = LocateRegistry.createRegistry(c.cPort);
             System.out.println("Registro (local) lanzado correctamente");
         } catch (RemoteException e) {
-            System.out.println("Error lanzando el registro");
-            System.exit(-1);
+            System.out.println("Error lanzando el registro (puerto ocupado)");
+            Registry registro = LocateRegistry.createRegistry(c.cPort+1);
+            c.cPort++;
         }
 
 
@@ -134,8 +139,6 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         }
 
         System.out.println("Introduce tu alias!");
-        c.alias = s.nextLine();
-        String localhost = InetAddress.getLocalHost().getHostName();
 
         while (true) {
             String opcion = "";

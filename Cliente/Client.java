@@ -19,7 +19,9 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.Scanner;
 import java.util.concurrent.locks.Condition;
@@ -35,7 +37,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
     private static Client c;
     
     private int cPort;
-    private String alias;
+    private String alias="";
     private Queue<GroupMessage> msgQueue;
     private GroupServerInterface proxy;
     
@@ -52,13 +54,15 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         mutex = new ReentrantLock(true);
         waiting = mutex.newCondition();
         msgQueue = new LinkedList<GroupMessage>();
+        alias=new String();
     }
 
     public static void main(String[] args) throws UnknownHostException, IOException {
 
         //Asignar fichero de política de seguridad
         System.setProperty("java.security.policy", "src/Cliente/seguridad.txt");
-
+        System.setProperty("java.rmi.server.hostname", InetAddress.getLocalHost().getHostAddress());
+        
         //Crear gestor de seguridad si no hay ninguno
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new SecurityManager());
@@ -79,6 +83,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         //Conseguir hostname local
         String localhost = InetAddress.getLocalHost().getHostName();
 
+       
         
         //Creación del objeto cliente
         try{
@@ -89,14 +94,17 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
             System.out.println("Error desconocido");
         }
         
+         System.out.println("Introduce tu alias");
+         c.alias = s.nextLine();
+        
         //Lanzar el registro en el puerto 1099
         try {
             Registry registro = LocateRegistry.createRegistry(c.cPort);
+            Naming.rebind(c.alias, c);
             System.out.println("Registro (local) lanzado correctamente");
         } catch (RemoteException e) {
             System.out.println("Error lanzando el registro (puerto ocupado)");
-            Registry registro = LocateRegistry.createRegistry(c.cPort+1);
-            c.cPort++;
+            System.exit(0);
         }
 
 
@@ -123,23 +131,22 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         } catch (NotBoundException ex) {
             //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("Name not bound");
-            System.exit(-2);
+            System.exit(2);
         } catch (MalformedURLException ex) {
             //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("Error en la direccion");
-            System.exit(-3);
+            System.exit(3);
         } catch (RemoteException ex) {
             //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("No se ha podido contactar con el registro");
-            System.exit(-4);
+            System.exit(4);
         } catch (java.security.AccessControlException ex) {
             //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("Error de seguridad (revisar pathname del fichero de políticas)");
-            System.exit(-5);
+            System.exit(5);
         }
 
-        System.out.println("Introduce tu alias!");
-        c.alias = s.nextLine();
+        
         
         while (true) {
             String opcion = "";
@@ -348,18 +355,20 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                 /* buscar mensajes para grupo galias en la cola */
                 for (GroupMessage m : msgQueue) {
                     // si no funciona, comprobar que msg == null
-                    if (m.emisor.gid == proxy.findGroup(galias)) {
+                    if ( msg == null && m.emisor.gid == proxy.findGroup(galias)) {
                         msg = m;
+                        System.out.println(">Mensaje ("+ msg.emisor.alias +"): "+ msg.mensaje.toString());
                         msgQueue.remove(m);
                     }
                 }
-                if (msg == null) {
-                    try {
-                        waiting.await();
-                    } catch (InterruptedException ex) {
-                        System.out.println("ERROR de concurrencia esperando mensaje");
-                    }
-                }
+//                if (msg == null) {
+//                    try {
+//                        waiting.await();
+//                    } catch (InterruptedException ex) {
+//                        System.out.println("ERROR de concurrencia esperando mensaje");
+//                    }
+//                }
+                System.out.println("");
             }
         } finally {
             mutex.unlock();

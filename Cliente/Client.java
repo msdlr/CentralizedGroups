@@ -139,7 +139,8 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         }
 
         System.out.println("Introduce tu alias!");
-
+        c.alias = s.nextLine();
+        
         while (true) {
             String opcion = "";
 

@@ -173,7 +173,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     try {
                         if (c.proxy.createGroup(nuevoGalias, c.alias, localhost, c.cPort) == -1) {
                             System.out.println("ERROR al crear el grupo");
-                            return;
+                            continue;
                         }
                     } catch (RemoteException ex) {
                         System.out.println("createGroup(): ERROR de acceso remoto creando grupo");
@@ -189,7 +189,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     try {
                         if (!c.proxy.ListMembers(galias).getFirst().equals(c.alias)) {
                             System.out.println("ERROR verificando que se es propietario");
-                            return;
+                            continue;
                         }
                     } catch (RemoteException ex) {
                         System.out.println("deleteGroup(): ERROR de acceso remoto verificando propietario");

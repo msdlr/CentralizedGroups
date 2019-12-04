@@ -362,7 +362,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     // si no funciona, comprobar que msg == null
                     if ( msg == null && m.emisor.gid == proxy.findGroup(galias)) {
                         msg = m;
-                        System.out.println(">Mensaje ("+ msg.emisor.alias +"): "+ msg.mensaje.toString());
+                        System.out.println(">Mensaje ("+ msg.emisor.alias +"): "+ new String(msg.mensaje));
                         msgQueue.remove(m);
                     }
                 }

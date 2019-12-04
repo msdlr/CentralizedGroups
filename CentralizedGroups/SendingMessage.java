@@ -6,6 +6,8 @@
 package CentralizedGroups;
 
 import Cliente.ClientInterface;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -38,14 +40,21 @@ public class SendingMessage extends Thread{
         try {
             //Conseguimos el registro y el proxy
             reg = LocateRegistry.getRegistry(dst.hostname, dst.port);
-            proxy = (ClientInterface) reg.lookup(dst.alias);
+            try {
+                String url = "rmi://"+dst.hostname+"/"+dst.alias;
+                proxy = (ClientInterface) Naming.lookup(url);
+            } catch (MalformedURLException ex) {
+                Logger.getLogger(SendingMessage.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (java.lang.ClassCastException ex) {
+                Logger.getLogger(SendingMessage.class.getName()).log(Level.SEVERE, null, ex);
+            }
             
             Random r = new Random();
             //Se genera un tiempo de espera aleatorio entre 30 y 60 (milisegundos!)
             int espera = 30 + r.nextInt(31);
             Thread.sleep(espera * 1000);
             //Deposita el mensaje, notifica al grupo
-            proxy.DepositMessage(msg);
+            if (proxy != null) proxy.DepositMessage(msg);
             grp.EndSending();
             
         //Excepciones

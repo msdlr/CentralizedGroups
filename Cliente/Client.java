@@ -81,7 +81,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         }
         
         //Conseguir hostname local
-        String localhost = InetAddress.getLocalHost().getHostName();
+        String localhost = InetAddress.getLocalHost().getHostAddress();
 
        
         

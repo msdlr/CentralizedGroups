@@ -37,6 +37,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
     private static Client c;
     
     private int cPort;
+    private boolean wait;
     private String alias="";
     private Queue<GroupMessage> msgQueue;
     private GroupServerInterface proxy;
@@ -56,6 +57,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         
         //Inicialización de los campos
         cPort = p;
+        wait = true;
         mutex = new ReentrantLock(true);
         waiting = mutex.newCondition();
         msgQueue = new LinkedList<GroupMessage>();
@@ -340,6 +342,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         try {
             /* añadir message a cola y despertar procesos bloqueados */
             msgQueue.add(m);
+            wait = false;
             waiting.signalAll();
         } finally {
             mutex.unlock();
@@ -355,30 +358,30 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
             if (c.proxy.isMember(galias, c.alias) == null) {
                 return null;
             }
-            /* mientras no haya mensaje que devolver */
+
             while (msg == null) {
-                /* buscar mensajes para grupo galias en la cola */
-                for (GroupMessage m : msgQueue) {
-                    // si no funciona, comprobar que msg == null
-                    if ( msg == null && m.emisor.gid == proxy.findGroup(galias)) {
-                        msg = m;
-                        System.out.println(">Mensaje ("+ msg.emisor.alias +"): "+ new String(msg.mensaje));
-                        msgQueue.remove(m);
+                /* obtener mensaje */
+                if (!msgQueue.isEmpty()) {
+                    /* buscar mensajes para grupo galias en la cola */
+                    for (GroupMessage m : msgQueue) {
+                        if (m.emisor.gid == proxy.findGroup(galias)) {
+                            msg = m;
+                            System.out.println(">Mensaje (" + msg.emisor.alias + "): " + new String(msg.mensaje));
+                            msgQueue.remove(m);
+                            return msg.mensaje;
+                        }
                     }
                 }
-//                if (msg == null) {
-//                    try {
-//                        waiting.await();
-//                    } catch (InterruptedException ex) {
-//                        System.out.println("ERROR de concurrencia esperando mensaje");
-//                    }
-//                }
-                System.out.println("");
+                /* si tras el for anterior msg sigue siendo null, bloquear */
+                if (msg == null) waiting.await();
             }
+        } catch (InterruptedException ex) {
+            System.out.println("ERROR esperando mensaje");
         } finally {
             mutex.unlock();
         }
-        return msg.mensaje;
+        /*  */
+        return null;
     }
 
 }

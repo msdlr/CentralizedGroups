@@ -49,6 +49,11 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         //Se exporta para que pueda atender peticiones de Callback (p4)
         super();
 
+        //Crear gestor de seguridad si no hay ninguno
+        if (System.getSecurityManager() == null) {
+            System.setSecurityManager(new SecurityManager());
+        }
+        
         //Inicialización de los campos
         cPort = p;
         mutex = new ReentrantLock(true);
@@ -100,7 +105,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
         //Lanzar el registro en el puerto 1099
         try {
             Registry registro = LocateRegistry.createRegistry(c.cPort);
-            Naming.rebind(c.alias, c);
+            Naming.rebind("//"+localhost+"/"+c.alias, c);
             System.out.println("Registro (local) lanzado correctamente");
         } catch (RemoteException e) {
             System.out.println("Error lanzando el registro (puerto ocupado)");

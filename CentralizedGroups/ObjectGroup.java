@@ -62,30 +62,24 @@ public class ObjectGroup {
     public GroupMember addMember(String alias, String hostname, int port) {
         l.lock();
         try {
-    //        /* si las altas y bajas estan bloqueadas, esperar a que se
-    //           desbloqueen                                             */
-    //        while (locked) {
-    //            allowMod.await();
-    //        }
-            /* salir de la función si las altas y bajas estan bloqueadas */
-            if (locked) {
-                System.out.println("Las altas y bajas de miembros se encuentran "
-                        + "bloqueadas en este momento.\n");
-                return null;
+            /* si las altas y bajas estan bloqueadas, esperar a que se
+               desbloqueen                                             */
+            while (locked) {
+                allowMod.await();
             }
             /* si ya existe un miembro con el mismo alias, devolver null */
             if (isMember(alias) != null) {
                 return null;
             }
             /* si no, añadir miembro nuevo */
-            members.add(new GroupMember(alias, hostname, counter+1, gid, port));
+            members.add(new GroupMember(alias, hostname, counter + 1, gid, port));
             /* una vez añadido, incrementar contador y devolver miembro */
             counter++;
-            return isMember(alias);    /* si la adición ha fallado, devuelve null */
-    //    } catch (InterruptedException e) {
-    //        System.out.println("ERROR esperando a desbloqueo");
-    //        return null;
-    //    }
+            return isMember(alias);
+            /* si la adición ha fallado, devuelve null */
+        } catch (InterruptedException ex) {
+            System.out.println("ERROR esperando a desbloqueo");
+            return null;
         } finally {
             l.unlock();
         }
@@ -113,7 +107,7 @@ public class ObjectGroup {
         }
     }
 
-/*  public void StopMembers() {
+    private void StopMembers() {
         l.lock();
         try {
             locked = true;
@@ -122,7 +116,7 @@ public class ObjectGroup {
         }
     }
 
-    public void AllowMembers() {
+    private void AllowMembers() {
         l.lock();
         try {
             locked = false;
@@ -130,7 +124,7 @@ public class ObjectGroup {
         } finally {
             l.unlock();
         }
-    }  */
+    }
 
     public LinkedList<String> ListMembers() {
         l.lock();
@@ -151,9 +145,9 @@ public class ObjectGroup {
         l.lock();
         try {
             pendingMsgs++;
-            if (pendingMsgs > 0) {
+            //if (pendingMsgs > 0) {
                 locked = true;
-            }
+            //}
         } finally {
             l.unlock();
         }
@@ -176,15 +170,12 @@ public class ObjectGroup {
         l.lock();
         try {
             Sending();
-            
             for (GroupMember target : members) {
                 if ( target.uid != gm.uid) {
                     SendingMessage m = new SendingMessage(this, new GroupMessage(msg, gm), target);
                     m.start();
                 }
             }
-            
-            EndSending();
             return true;
         } finally {
             l.unlock();

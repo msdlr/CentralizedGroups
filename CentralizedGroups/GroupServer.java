@@ -48,7 +48,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     public static void main(String args[]) throws RemoteException {
         //Fichero de política
         System.setProperty("java.security.policy", "src/CentralizedGroups/seguridad.txt");
-        //System.setProperty("java.rmi.server.hostname","192.168.0.28");  // <-- use server address here
+        System.setProperty("java.rmi.server.hostname","161.67.196.175");  // <-- use server address here
         GroupServer server = new GroupServer();
        
         //Si no se ejecuta aquí da excepción

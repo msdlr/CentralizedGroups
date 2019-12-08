@@ -41,6 +41,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
     private String alias="";
     private Queue<GroupMessage> msgQueue;
     private GroupServerInterface proxy;
+    private Registry registro;
     
     private ReentrantLock mutex = new ReentrantLock(true);
     private Condition waiting = mutex.newCondition();
@@ -104,9 +105,9 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
          System.out.println("Introduce tu alias");
          c.alias = s.nextLine();
         
-        //Lanzar el registro en el puerto 1099
+        //Lanzar el registro local en el puerto 1099
         try {
-            Registry registro = LocateRegistry.createRegistry(c.cPort);
+            c.registro = LocateRegistry.createRegistry(c.cPort);
             Naming.rebind("//"+localhost+"/"+c.alias, c);
             System.out.println("Registro (local) lanzado correctamente");
         } catch (RemoteException e) {
@@ -131,26 +132,24 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
         url = "rmi://" + ip + "/GroupServer";
         System.out.println("Buscando servidor: " + url);
-
+        
         try {
             c.proxy = (GroupServerInterface) Naming.lookup(url);
+            //Registry registroServ = LocateRegistry.getRegistry(ip);
+            //c.proxy = (GroupServerInterface) registroServ.lookup("GroupServer");
             System.out.println("PROXY OBTENIDO CORRECTAMENTE");
         } catch (NotBoundException ex) {
             //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("Name not bound");
             System.exit(2);
-        } catch (MalformedURLException ex) {
-            //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("Error en la direccion");
-            System.exit(3);
         } catch (RemoteException ex) {
             //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("No se ha podido contactar con el registro");
-            System.exit(4);
+            System.exit(3);
         } catch (java.security.AccessControlException ex) {
             //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("Error de seguridad (revisar pathname del fichero de políticas)");
-            System.exit(5);
+            System.exit(4);
         }
 
         

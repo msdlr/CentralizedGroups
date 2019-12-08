@@ -38,9 +38,10 @@ public class SendingMessage extends Thread{
     @Override
     public void run(){        
         try {
-            //Conseguimos el registro y el proxy
-            reg = LocateRegistry.getRegistry(dst.hostname, dst.port);
             try {
+                //Conseguimos el registro y el proxy
+                //reg = LocateRegistry.getRegistry(dst.hostname, dst.port);
+                //proxy = (ClientInterface) Naming.lookup(dst.hotname);
                 String url = "rmi://"+dst.hostname+"/"+dst.alias;
                 proxy = (ClientInterface) Naming.lookup(url);
             } catch (MalformedURLException ex) {

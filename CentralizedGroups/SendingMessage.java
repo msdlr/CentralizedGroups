@@ -52,7 +52,7 @@ public class SendingMessage extends Thread{
             
             Random r = new Random();
             //Se genera un tiempo de espera aleatorio entre 30 y 60 (milisegundos!)
-            int espera = 30 + r.nextInt(31);
+            int espera = 5 + r.nextInt(11);
             Thread.sleep(espera * 1000);
             //Deposita el mensaje, notifica al grupo
             if (proxy != null) proxy.DepositMessage(msg);

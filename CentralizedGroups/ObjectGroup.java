@@ -19,7 +19,8 @@ public class ObjectGroup {
     String oalias;
     int gid;    /* group id */
     int oid;    /* owner id */
-    private int counter;
+    private int counter;    /* == n. de miembros */
+    int pendingMsgs;        /* n. de envios pendientes */
     LinkedList<GroupMember> members;
 
     /* estructuras para bloqueo */
@@ -28,14 +29,16 @@ public class ObjectGroup {
     ReentrantLock l = new ReentrantLock(true);
     Condition allowMod = l.newCondition();
 
-    public ObjectGroup(String galias, int gid, String oalias, String ohostname) {
+    //Constructor actualizado para p4
+    public ObjectGroup(String galias, int gid, String oalias, String ohostname, int port) {
         this.galias = galias;
         this.oalias = oalias;
         this.gid = gid;
         this.members = new LinkedList();
-        counter = 1;
+        counter = 0;
+        pendingMsgs = 0;
         //addMember(oalias);
-        GroupMember member = new GroupMember(oalias, ohostname, counter, gid);
+        GroupMember member = new GroupMember(oalias, ohostname, counter+1, gid, port);
         members.add(member);
         counter++;
     }
@@ -56,41 +59,33 @@ public class ObjectGroup {
         }
     }
 
-    public GroupMember addMember(String alias) {
-        /* TODO: control de bloqueo */
+    public GroupMember addMember(String alias, String hostname, int port) {
         l.lock();
         try {
-    //        /* si las altas y bajas estan bloqueadas, esperar a que se
-    //           desbloqueen                                             */
-    //        while (locked) {
-    //            allowMod.await();
-    //        }
-            /* salir de la función si las altas y bajas estan bloqueadas */
-            if (locked) {
-                System.out.println("Las altas y bajas de miembros se encuentran "
-                        + "bloqueadas en este momento.\n");
-                return null;
+            /* si las altas y bajas estan bloqueadas, esperar a que se
+               desbloqueen                                             */
+            while (locked) {
+                allowMod.await();
             }
             /* si ya existe un miembro con el mismo alias, devolver null */
             if (isMember(alias) != null) {
                 return null;
             }
             /* si no, añadir miembro nuevo */
-            members.add(new GroupMember(alias, oalias, counter, gid));
+            members.add(new GroupMember(alias, hostname, counter + 1, gid, port));
             /* una vez añadido, incrementar contador y devolver miembro */
             counter++;
-            return isMember(alias);    /* si la adición ha fallado, devuelve null */
-    //    } catch (InterruptedException e) {
-    //        System.out.println("ERROR esperando a desbloqueo");
-    //        return null;
-    //    }
+            return isMember(alias);
+            /* si la adición ha fallado, devuelve null */
+        } catch (InterruptedException ex) {
+            System.out.println("ERROR esperando a desbloqueo");
+            return null;
         } finally {
             l.unlock();
         }
     }
 
     public boolean removeMember(String alias) {
-        /* TODO: control de bloqueo */
         l.lock();
         try {
             /* si las altas y bajas estan bloqueadas, esperar a que se 
@@ -112,7 +107,7 @@ public class ObjectGroup {
         }
     }
 
-    public void StopMembers() {
+    private void StopMembers() {
         l.lock();
         try {
             locked = true;
@@ -121,18 +116,18 @@ public class ObjectGroup {
         }
     }
 
-    public void AllowMembers() {
+    private void AllowMembers() {
         l.lock();
         try {
             locked = false;
-            allowMod.signalAll();    /* desbloquear clientes bloqueados */
+            allowMod.signalAll();    // desbloquear clientes bloqueados
         } finally {
             l.unlock();
         }
     }
 
     public LinkedList<String> ListMembers() {
-        this.l.lock();
+        l.lock();
         try{
         LinkedList<String> nombres = new LinkedList();
         for (GroupMember member : members) {
@@ -142,8 +137,50 @@ public class ObjectGroup {
         return nombres;
         }
         finally{
-            this.l.unlock();
+            l.unlock();
         }
+    }
+    
+    void Sending() {
+        l.lock();
+        try {
+            pendingMsgs++;
+            //if (pendingMsgs > 0) {
+                locked = true;
+            //}
+        } finally {
+            l.unlock();
+        }
+    }
+    
+    void EndSending() {
+        l.lock();
+        try {
+            pendingMsgs--;
+            if (pendingMsgs == 0) {
+                locked = false;
+                allowMod.signalAll();
+            }
+        } finally {
+            l.unlock();
+        }
+    }
+    
+    boolean sendGroupMessage(GroupMember gm, byte msg[]) {
+        l.lock();
+        try {
+            Sending();
+            for (GroupMember target : members) {
+                if ( target.uid != gm.uid) {
+                    SendingMessage m = new SendingMessage(this, new GroupMessage(msg, gm), target);
+                    m.start();
+                }
+            }
+            return true;
+        } finally {
+            l.unlock();
+        }
+        //return false;
     }
 
 }

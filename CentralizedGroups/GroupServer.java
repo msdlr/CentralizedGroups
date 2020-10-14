@@ -47,9 +47,8 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     /* MAIN */
     public static void main(String args[]) throws RemoteException {
         //Fichero de política
-        System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralizedGroups/src/CentralizedGroups/seguridad.txt");
-        //System.setProperty("java.security.policy", "C:\\Users\\usuario\\Desktop\\CentralizedGroups\\src\\CentralizedGroups\\seguridad.txt");
-        System.setProperty("java.rmi.server.hostname","192.168.0.28");  // <-- use server address here
+        System.setProperty("java.security.policy", "src/CentralizedGroups/seguridad.txt");
+        System.setProperty("java.rmi.server.hostname","161.67.196.175");  // <-- use server address here
         GroupServer server = new GroupServer();
        
         //Si no se ejecuta aquí da excepción
@@ -74,7 +73,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     
     /* FUNCIONES DE LA INTERFAZ */
     @Override
-    public int createGroup(String galias, String oalias, String ohostname) throws RemoteException {
+    public int createGroup(String galias, String oalias, String ohostname, int port) throws RemoteException {
         /* ENTRADA EN SECCIÓN CRÍTICA */
         this.mutex.lock();
         
@@ -89,7 +88,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             this.groupCounter++;
             //Creamos el nuevo grupo y le ponemos al usuario invocador como miembro
             //El nuevo propietario del grupo es el cliente invocador que se pasa por alias
-            ObjectGroup nGroup = new ObjectGroup(galias,groupCounter, oalias, ohostname);
+            ObjectGroup nGroup = new ObjectGroup(galias,groupCounter, oalias, ohostname, port);
             //No hace falta añadir un nuevo GroupMember al grupo porque ya lo hace el constructor de ObjectGroup
             this.groupList.add(nGroup);
         }
@@ -160,7 +159,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
     }
 
     @Override
-    public GroupMember addMember(String galias, String alias, String hostname) throws RemoteException {
+    public GroupMember addMember(String galias, String alias, String hostname, int port) throws RemoteException {
         this.mutex.lock();
         
         try{
@@ -171,7 +170,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
                     
                     //Si no está, lo añadimos
                     this.mutex.unlock();
-                    return OG.addMember(alias);
+                    return OG.addMember(alias,hostname,port);
                 }
             }
         }
@@ -233,7 +232,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         }
     }
 
-    @Override
+/*  @Override
     public boolean StopMembers(String galias) throws RemoteException {
         this.mutex.lock();
         try{
@@ -265,7 +264,7 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
         finally{
             this.mutex.unlock();
         }
-    }
+    } */
 
     @Override
     public LinkedList<String> ListMembers(String galias) throws RemoteException {
@@ -293,5 +292,23 @@ public class GroupServer extends UnicastRemoteObject implements GroupServerInter
             grupos.add(OG.galias);
         }
         return grupos;
+    }
+
+    @Override
+    public boolean sendGroupMessage(GroupMember gm, byte[] msg) throws RemoteException {
+        this.mutex.lock();
+        /* Entrada en sección crítica */
+        
+        //Buscamos el miembro que se busca
+        for (ObjectGroup OG : this.groupList){
+                //Si en este grupo encontramos el cliente que buscamos, enviamos
+                if( OG.isMember(gm.alias) != null ){
+                    //Salimos enviamos y salimos de sección crítica solo si el miembro existe
+                    this.mutex.unlock();
+                    return OG.sendGroupMessage(gm, msg);
+                }
+        }
+        this.mutex.unlock();
+        return false;
     }
 }

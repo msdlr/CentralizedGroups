@@ -5,10 +5,15 @@
  */
 package Cliente;
 
+import CentralizedGroups.GroupMessage;
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
 /**
  *
- * @author Miguel
+ * @author Silvia
  */
-public interface ClientInterface {
-    
+public interface ClientInterface extends Remote {
+    void DepositMessage(GroupMessage m) throws RemoteException;
+    byte[] receiveGroupMessage(String galias) throws RemoteException;
 }

@@ -5,6 +5,8 @@
  */
 package Cliente;
 
+import CentralizedGroups.GroupMember;
+import CentralizedGroups.GroupMessage;
 import CentralizedGroups.GroupServerInterface;
 import java.io.IOException;
 import java.net.InetAddress;
@@ -16,8 +18,14 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.Scanner;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  *
@@ -26,43 +34,94 @@ import java.util.Scanner;
 public class Client extends UnicastRemoteObject implements ClientInterface {
 
     /* Atributos para la clase */
+    private static Client c;
+    
+    private int cPort;
+    private boolean wait;
+    private String alias="";
+    private Queue<GroupMessage> msgQueue;
+    private GroupServerInterface proxy;
+    private Registry registro;
+    
+    private ReentrantLock mutex = new ReentrantLock(true);
+    private Condition waiting = mutex.newCondition();
 
- /* CONSTRUCTOR */
-    Client() throws RemoteException {
+    /* CONSTRUCTOR */
+    Client(int p) throws RemoteException {
         //Se exporta para que pueda atender peticiones de Callback (p4)
         super();
-    }
-
-    public static void main(String[] args) throws UnknownHostException, IOException {
-
-        //Asignar fichero de política de seguridad
-        System.setProperty("java.security.policy", "/home/pwnage/NetBeansProjects/CentralizedGroups/src/Cliente/seguridad.txt");
 
         //Crear gestor de seguridad si no hay ninguno
         if (System.getSecurityManager() == null) {
             System.setSecurityManager(new SecurityManager());
         }
+        
+        //Inicialización de los campos
+        cPort = p;
+        wait = true;
+        mutex = new ReentrantLock(true);
+        waiting = mutex.newCondition();
+        msgQueue = new LinkedList<GroupMessage>();
+        alias=new String();
+    }
 
-        //Lanzar el registro en el puerto 1099
+    public static void main(String[] args) throws UnknownHostException, IOException {
+
+        //Asignar fichero de política de seguridad
+        System.setProperty("java.security.policy", "src/Cliente/seguridad.txt");
+        System.setProperty("java.rmi.server.hostname", InetAddress.getLocalHost().getHostAddress());
+        
+        //Crear gestor de seguridad si no hay ninguno
+        if (System.getSecurityManager() == null) {
+            System.setSecurityManager(new SecurityManager());
+        }
+        //Creamos el objeto de tipo Cliente
+        //Preguntar puerto
+        Scanner s = new Scanner(System.in);
+        System.out.println("Introduce puerto del registro local");
+        String puerto = s.nextLine();
+
+        int nPuerto = 1099;
         try {
-            Registry registro = LocateRegistry.getRegistry(1099);
+            nPuerto = Integer.parseInt(puerto);
+        } catch (NumberFormatException e) {
+            System.out.println("Puerto no válido, asignando 1099");
+        }
+        
+        //Conseguir hostname local
+        String localhost = InetAddress.getLocalHost().getHostAddress();
+
+       
+        
+        //Creación del objeto cliente
+        try{
+            c = new Client(nPuerto);
+        } catch (RemoteException e){
+            System.out.println("Error remoto creando el servidor");
+        } catch(Exception e) {
+            System.out.println("Error desconocido");
+        }
+        
+         System.out.println("Introduce tu alias");
+         c.alias = s.nextLine();
+        
+        //Lanzar el registro local en el puerto 1099
+        try {
+            c.registro = LocateRegistry.createRegistry(c.cPort);
+            Naming.rebind("//"+localhost+"/"+c.alias, c);
             System.out.println("Registro (local) lanzado correctamente");
         } catch (RemoteException e) {
-            System.out.println("Error lanzando el registro");
-            System.exit(-1);
+            System.out.println("Error lanzando el registro (puerto ocupado)");
+            System.exit(0);
         }
 
-        //Creamos el objeto de tipo Cliente
-        Client c;
-        c = new Client();
 
         //Objeto del tipo de la interfaz -> proxy
-        GroupServerInterface proxy = null;
+        c.proxy = null;
 
         //Conexión local / remota
         System.out.println("Local/IP");
 
-        Scanner s = new Scanner(System.in);
         String ip = s.nextLine();
         String url = null;
 
@@ -73,57 +132,54 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
         url = "rmi://" + ip + "/GroupServer";
         System.out.println("Buscando servidor: " + url);
-
+        
         try {
-            proxy = (GroupServerInterface) Naming.lookup(url);
+            c.proxy = (GroupServerInterface) Naming.lookup(url);
+            //Registry registroServ = LocateRegistry.getRegistry(ip);
+            //c.proxy = (GroupServerInterface) registroServ.lookup("GroupServer");
             System.out.println("PROXY OBTENIDO CORRECTAMENTE");
         } catch (NotBoundException ex) {
             //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("Name not bound");
-            System.exit(-2);
-        } catch (MalformedURLException ex) {
-            //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-            System.out.println("Error en la direccion");
-            System.exit(-3);
+            System.exit(2);
         } catch (RemoteException ex) {
             //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("No se ha podido contactar con el registro");
-            System.exit(-4);
+            System.exit(3);
         } catch (java.security.AccessControlException ex) {
             //Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("Error de seguridad (revisar pathname del fichero de políticas)");
-            System.exit(-5);
+            System.exit(4);
         }
 
-        System.out.println("Introduce tu alias!");
-        String alias = s.nextLine();
-        String localhost = InetAddress.getLocalHost().getHostName();
-
+        
+        
         while (true) {
             String opcion = "";
 
-            System.out.println("\n"+alias + "@" + localhost + "\n"+
-                    "1: crear grupo\n"
+            System.out.println("\n" + c.alias + "@" + localhost + "\n"
+                    + "1: crear grupo\n"
                     + "2: eliminar grupo\n"
                     + "3: entrar/salir de un grupo\n"
-                    + "4: bloquear/desbloquear altas y bajas\n"
-                    + "5: mostrar miembros de un grupo\n"
-                    + "6: mostrar grupos actuales\n"
-                    + "7: terminar ejecución");
+                    + "4: enviar mensaje\n"
+                    + "5: recoger mensaje\n"
+                    + "6: mostrar miembros de un grupo\n"
+                    + "7: mostrar grupos actuales\n"
+                    + "8: terminar ejecución");
 
             //Leer opción
             opcion = s.nextLine();
 
-            switch (Integer.parseInt(opcion)) {
-                case 1: //Crear un grupo nuevo
+            switch (opcion) {
+                case "1": //Crear un grupo nuevo
                     // supone que alias y hostname se obtienen al principio del main
                     System.out.println("Creando grupo...");
                     System.out.println("Alias del grupo:");
                     String nuevoGalias = s.nextLine();
                     try {
-                        if (proxy.createGroup(nuevoGalias, alias, localhost) == -1) {
+                        if (c.proxy.createGroup(nuevoGalias, c.alias, localhost, c.cPort) == -1) {
                             System.out.println("ERROR al crear el grupo");
-                            return;
+                            continue;
                         }
                     } catch (RemoteException ex) {
                         System.out.println("createGroup(): ERROR de acceso remoto creando grupo");
@@ -131,15 +187,15 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     System.out.println("Grupo " + nuevoGalias + " creado");
                     break;
 
-                case 2: //Borrar grupo
+                case "2": //Borrar grupo
                     System.out.println("eliminando grupo...");
                     String galias;
                     System.out.println("Alias del grupo:");
                     galias = s.nextLine();
                     try {
-                        if (!proxy.ListMembers(galias).getFirst().equals(alias)) {
+                        if (!c.proxy.ListMembers(galias).getFirst().equals(c.alias)) {
                             System.out.println("ERROR verificando que se es propietario");
-                            return;
+                            continue;
                         }
                     } catch (RemoteException ex) {
                         System.out.println("deleteGroup(): ERROR de acceso remoto verificando propietario");
@@ -147,7 +203,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                         System.out.println("deleteGroup(): ERROR, el grupo no existe");
                     }
                     try {
-                        if (!proxy.removeGroup(galias, alias)) {
+                        if (!c.proxy.removeGroup(galias, c.alias)) {
                             System.out.println("ERROR al borrar grupo");
                         } else {
                             System.out.println("Grupo " + galias + " eliminado");
@@ -158,17 +214,17 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
                     break;
 
-                case 3: //Unirse / salir de un grupo
+                case "3": //Unirse / salir de un grupo
                     String entrarSalir,
                      galiasEntrarSalir;
                     System.out.println("Alias del grupo:");
                     galiasEntrarSalir = s.nextLine();
                     try {
-                        if (proxy.isMember(galiasEntrarSalir, alias) != null) {
+                        if (c.proxy.isMember(galiasEntrarSalir, c.alias) != null) {
                             System.out.println("Ya estás en el grupo " + galiasEntrarSalir + ", salir de él? (s/n)");
                             entrarSalir = s.nextLine();
                             if (entrarSalir.equals("s")) {
-                                if (!proxy.removeMember(galiasEntrarSalir, alias)) {
+                                if (!c.proxy.removeMember(galiasEntrarSalir, c.alias)) {
                                     System.out.println("ERROR al salir de grupo");
                                 } else {
                                     System.out.println("Se ha salido del grupo con éxito");
@@ -180,7 +236,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                             System.out.println("Unirte al grupo " + galiasEntrarSalir + "? (s/n)");
                             entrarSalir = s.nextLine();
                             if (entrarSalir.equals("s")) {
-                                if (proxy.addMember(galiasEntrarSalir, alias, localhost) == null) {
+                                if (c.proxy.addMember(galiasEntrarSalir, c.alias, localhost, c.cPort) == null) {
                                     System.out.println("ERROR al unirse a grupo; las altas pueden estar bloqueadas");
                                 } else {
                                     System.out.println("Se ha unido al grupo con éxito");
@@ -195,62 +251,48 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
 
                     break;
 
-                case 4: //Bloquear/desbloquear altas/bajas
+                case "4":
+                    /* Enviar mensaje*/
+                    //Necesitamos saber el nombre del grupo
+                    System.out.println("Escribe el nombre del grupo");
+                    String gEnviar = s.nextLine();
 
-                    //Variables
-                    String B_D = "";
-                    int gid = 0;
-                    String busqueda = null;
-
-                    //Necesitamos el gid del grupo y si es alta o baja
-                    //Buscar grupo
-                    System.out.println("Introduce el alias del grupo");
-                    busqueda = s.nextLine();
-                    System.out.println("Buscando grupo" + busqueda);
-
+                    //Comprobar si existe el grupo
                     try {
-                        gid = proxy.findGroup(busqueda);
-                    } catch (RemoteException ex) {
-                        System.out.println("allowOrDeny(): ERROR obteniendo gid");
-                        break;
-                    }
-                    if (gid == -1) {
-                        //Si el grupo no se ha encontrado
-                        System.out.println("Grupo " + busqueda + " no encontrado");
-                    } else {
-                        //Si el grupo se ha encontrado
-                        System.out.println("GRUPO:" + busqueda + " con  GID" + gid);
+                        if (c.proxy.findGroup(gEnviar) == -1) {
+                            //Si el grupo no se encuentra
+                            System.out.println("Grupo " + gEnviar + " no encontrado");
+                        } else {
+                            //Si el grupo existe, comprobamos si se es miembro
+                            GroupMember m = c.proxy.isMember(gEnviar, c.alias);
+                            if (m == null) {
+                                System.out.println("No eres miembro del grupo " + gEnviar);
+                            } else {
+                                String msg = s.nextLine();
 
-                        System.out.println("[B]loquear altas/bajas \n [D]esbloquear altas/bajas ");
-
-                        B_D = s.nextLine();
-                        switch (B_D) {
-                            case "D":
-                            case "d":
-                                try {
-                                    proxy.AllowMembers(busqueda);
-                                } catch (RemoteException ex) {
-                                    System.out.println("allowOrDeny(): ERROR desbloqueando altas/bajas");
+                                boolean ok = c.proxy.sendGroupMessage(m, msg.getBytes());
+                                if (ok) {
+                                    System.out.println("Mensaje enviado con éxito");
+                                } else {
+                                    System.out.println("Error (no remoto) enviando el mensaje");
                                 }
-                                System.out.println("DesbCloqueadas las altas/bajas en el grupo " + B_D);
-                                break;
-                            case "B":
-                            case "b":
-                                try {
-                                    proxy.StopMembers(busqueda);
-                                } catch (RemoteException ex) {
-                                    System.out.println("allowOrDeny(): ERROR bloqueando altas/bajas");
-                                }
-                                System.out.println("Bloqueadas las altas/bajas en el grupo " + busqueda);
-                                break;
-                            default:
-                                System.out.println("ERROR");
+                            }
                         }
+                    } catch (RemoteException e) {
+                        System.out.println("Error remoto");
                     }
-                    
+
                     break;
 
-                case 5: //Mostrar miembros de un grupo en específico
+                case "5":
+                    /* Recoger mensaje */
+                    String gRecv = "";
+                    System.out.println("Introduce el alias del grupo");
+                    gRecv = s.nextLine();
+                    c.receiveGroupMessage(gRecv);
+                    break;
+
+                case "6": //Mostrar miembros de un grupo en específico
                     String nombreGrupo = "";
                     LinkedList<String> namesList;
 
@@ -258,7 +300,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     nombreGrupo = s.nextLine();
                     System.out.println("Buscando el grupo con alias \"" + nombreGrupo + "\"");
                     try {
-                        namesList = proxy.ListMembers(nombreGrupo);
+                        namesList = c.proxy.ListMembers(nombreGrupo);
                         if (namesList == null) {
                             System.out.println("El grupo " + nombreGrupo + " no existe");
                         } else {
@@ -269,10 +311,10 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     }
                     break;
 
-                case 6: //Mostrar grupos actuales
+                case "7": //Mostrar grupos actuales
                     LinkedList<String> l = new LinkedList();
                     try {
-                        l = proxy.ListGroup();
+                        l = c.proxy.ListGroup();
                         if (l.isEmpty()) {
                             System.out.println("No hay grupos en este servidor");
                         } else {
@@ -283,7 +325,7 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
                     }
                     break;
 
-                case 7: //Salir
+                case "8": //Salir
                     System.exit(0);
 
                 default: //Intro / opción no válida 
@@ -291,6 +333,54 @@ public class Client extends UnicastRemoteObject implements ClientInterface {
             }
         }
 
+    }
+
+    @Override
+    public void DepositMessage(GroupMessage m) throws RemoteException {
+        mutex.lock();
+        try {
+            /* añadir message a cola y despertar procesos bloqueados */
+            msgQueue.add(m);
+            wait = false;
+            waiting.signalAll();
+        } finally {
+            mutex.unlock();
+        }
+    }
+
+    @Override
+    public byte[] receiveGroupMessage(String galias) throws RemoteException {
+        GroupMessage msg = null;
+        mutex.lock();
+        try {
+            /* verificar usuario y grupo */
+            if (c.proxy.isMember(galias, c.alias) == null) {
+                return null;
+            }
+
+            while (msg == null) {
+                /* obtener mensaje */
+                if (!msgQueue.isEmpty()) {
+                    /* buscar mensajes para grupo galias en la cola */
+                    for (GroupMessage m : msgQueue) {
+                        if (m.emisor.gid == proxy.findGroup(galias)) {
+                            msg = m;
+                            System.out.println(">Mensaje (" + msg.emisor.alias + "): " + new String(msg.mensaje));
+                            msgQueue.remove(m);
+                            return msg.mensaje;
+                        }
+                    }
+                }
+                /* si tras el for anterior msg sigue siendo null, bloquear */
+                if (msg == null) waiting.await();
+            }
+        } catch (InterruptedException ex) {
+            System.out.println("ERROR esperando mensaje");
+        } finally {
+            mutex.unlock();
+        }
+        /*  */
+        return null;
     }
 
 }
